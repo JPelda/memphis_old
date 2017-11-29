@@ -26,9 +26,7 @@ Find all information about changes of the different versions of this module
 `{"role": "", "ref":123, "type": "node"}`
 
 """
-'''
-einen kommentar zum Testen
-'''
+
 from __future__ import (absolute_import, print_function, unicode_literals)
 import xml.dom.minidom
 import time
