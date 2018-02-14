@@ -28,8 +28,14 @@ cur_spatial = con_spatial.cursor()
 cur_memphis = con_memphis.cursor()
 engine = sqla.create_engine('mysql+pymysql://root:wasteheat@localhost:3306/spatial', echo=False)
 #query = ("SELECT * FROM `spatial` WHERE osm_id = {} ").format(4262992)
-query_spatial = ("SELECT ST_ASText(SHAPE), osm_id, name FROM `roads_ns` "
-                 " WHERE name = {}").format("'Drosselgasse'")
+#query_spatial = ("SELECT ST_ASText(SHAPE), osm_id, name FROM `goettingen` "
+#                 "WHERE code IN ( "
+#                 "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}) ").format(
+#                         5111, 5112, 5113, 5114, 5115, 5121, 5122,
+#                         5131, 5132, 5133, 5134)
+query_spatial = ("SELECT ST_ASText(SHAPE), osm_id, name FROM `roads_goettingen` "
+                 "WHERE code IN ( "
+                 "{}, {}, {}, {}) ").format(5111, 5112, 5113, 5114)
 #query_spatial = ("SELECT ST_ASText(SHAPE), osm_id, name FROM `roads_ns`")
 
 
@@ -40,6 +46,7 @@ print(data[2])
 ls = []
 for item in data:
     ls.append(shapely.wkt.loads(item[0]))
+    # TODO change to geo = df['ST_ASText(SHAPE)'].map(shapely.wkt.loads)
 
 #  generate list of tuple(coordinates) of LINESTRING
 vs_max = 0
