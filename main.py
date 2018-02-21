@@ -13,3 +13,11 @@ from DataIO import DataIO
 
 test_DataIO = DataIO()
 
+######
+#Data import
+
+
+###
+#allocation
+
+
