@@ -10,28 +10,27 @@ import pandas as pd
 import shapefile
 import pymysql
 
+
 class Allocation:
     def __init__(self):
         pass
 
     def allocate_censusgrid_to_polygons(self, sql_query, engine):
-        #merge censusgrid with geodata polygons
+        # merge censusgrid with geodata polygons
         pass
-    
+
     def calculate_wastewaterflow(self, sql_query, engine):
         # TODO
-        # multiply column 'Inhabitants' from db-Table "inhabitants" of DB 
-        #MEMPHIS_Output with newTable MEMPHIS_Input"wastewaterflow per Person"
+        # multiply column 'Inhabitants' from db-Table "inhabitants" of DB
+        # MEMPHIS_Output with newTable MEMPHIS_Input"wastewaterflow per Person"
         return wastewaterflow
         pass
-    
+
     def allocate_centroids(self):
-        #assign wastewaterflow to centroids and allocate centroids to nearest Edge
+        # assign wwflow to centroids and allocate centr. to nearest Edge
             # -> comulate all wastewaterflows
         return sawageflow
-        
-    
-    
+
 
 if __name__ == "__main__":
     print('main')

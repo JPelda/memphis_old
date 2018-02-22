@@ -8,6 +8,7 @@ Created on Wed Feb 21 10:40:53 2018
 import pandas as pd
 from sqlalchemy import create_engine
 
+
 class DataIO:
     def __init__(self):
         pass
@@ -20,11 +21,9 @@ class DataIO:
         # execute sql_query
         # save sql_query result into df
         # return df
-        
+
         return df
-    
-    
-    
+
 
 if __name__ == "__main__":
     print('main')

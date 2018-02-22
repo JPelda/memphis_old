@@ -10,14 +10,14 @@ import pandas as pd
 import shapefile
 import pymysql
 
+
 class Calculation:
     def __init__(self):
         pass
 
     def comulate_sawageflows(self, sql_query, engine):
-        #comulate sawageflows only along best ways to treatment plant
+        # comulate sawageflows only along best ways to treatment plant
         return treatmentplantinput
-    
 
 
 if __name__ == "__main__":
