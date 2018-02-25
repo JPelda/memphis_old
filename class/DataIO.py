@@ -10,20 +10,21 @@ from sqlalchemy import create_engine
 
 
 class DataIO:
-    def __init__(self):
-        pass
+    def __init__(self, config):
+        self.config
+        self.engine = create_engine(config[sql], echo=False)
 
-    def write_to_sqlServer(self, sql_query):
-        pass
+    def write_to_sqlServer(self, name, df):
+        df.to_sql(name, self.engine, if_exists='replace')
+        ('Saved Data to {} in db {}'.format(name, self.engine))
 
     def read_from_sqlServer(self, sql_query, engine):
-        # TODO call(sql_query), transform result into pandas.DataFrame()
+        # calls(sql_query), transforms it into pandas.DataFrame()
         # execute sql_query
         # save sql_query result into df
         # return df
-
+        df = pd.read_sql(self.engine)
         return df
-
 
 if __name__ == "__main__":
     print('main')

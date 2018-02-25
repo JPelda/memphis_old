@@ -19,20 +19,25 @@ class Conditioning:
 #        #TODO read buildingsshp(shapefile, fiona, or ogr)of bbox selection
 #        pass
 
-    def get_centroid(self, sql_query, engine):
+    def get_centroid(self, df):
         # TODO calculate centroid from polygon
         # gets polygons
         # returns centroids as df dataframe
-        return centroid
+        return df
 
-    def save_centroid(self, sql, engine):
-        # TODO save in centrois Points (x,y) in df
 
-        pass  # hier oder in Main Bereich Output??
 
-    def transform_coords(self, x, y, coord_system):
-        # MYSQL_transf_coords py
-        return x, y
+    def transform_coords(self, x, y, from_coord, into_coord):
+        '''
+        input:  x as []
+                y as []
+                from_coord as string
+                into_coord as string
+        out:    x as []
+                y as []
+        '''
+        xy = transform(Proj(init=from_coord), Proj(init=into_coord), x, y)
+        return xy[0], xy[1]
 
     def best_way_calculation(self):
         # TODO wighted graph ways + nodes find shortest way (ask Script Pascal)
