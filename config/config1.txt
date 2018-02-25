@@ -1,2 +1,2 @@
-[SQL]
+﻿[SQL]
 db : 'mysql+pymysql://root:wasteheat@localhost:3306/spatial'
