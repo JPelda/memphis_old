@@ -32,21 +32,21 @@ engine = create_engine('mysql+pymysql://root:wasteheat@localhost:3306/test', ech
 
 #CSV_FILE = eval(os.path.dirname(os.getcwd()) + os.sep + "csv_Bevoelkerung_100m_Gitter" + os.sep + "Zensus_Bevoelkerung_100m-Gitter.csv")
 
-query = "LOAD DATA INFILE 'census.csv' INTO TABLE census_ger FIELDS TERMINATED BY ';' ENCLOSED BY '\"' ESCAPED BY '\\\\'"
+query = "LOAD DATA INFILE 'Zensus_Bevoelkerung_100m-Gitter.csv' INTO TABLE census_ger FIELDS TERMINATED BY ';' ENCLOSED BY '\"' ESCAPED BY '\\\\'"
 #load_data = "LOAD DATA INFILE `Zensus_Bevoelkerung_100m-Gitter.csv` INTO TABLE census_ger"
 #df = pd.DataFrame(np.random.randint(low=0, high=10, size=(4, 4)),
 #                  columns=['grid_ID_100m', 'x_mp_100m', 'y_mp_100m', 'inhabitans'])
-ID = 'ID'
-x = 'x'
-y = 'y'
-val = 'inhabitants'
-pd.DataFrame()
-fname = 'Zensus_Bevoelkerung_100m-Gitter.csv'
-data_header = pd.read_csv(fname, delimiter=';', header=0, nrows=0)
-
-data = pd.read_csv(fname, delimiter=';', names=[ID, x, y, val],
-                   skiprows=1)
-print(data)
+#ID = 'ID'
+#x = 'x'
+#y = 'y'
+#val = 'inhabitants'
+#pd.DataFrame()
+#fname = 'Zensus_Bevoelkerung_100m-Gitter.csv'
+#data_header = pd.read_csv(fname, delimiter=';', header=0, nrows=0)
+#
+#data = pd.read_csv(fname, delimiter=';', names=[ID, x, y, val],
+#                   skiprows=1)
+#print(data)
 
 #chunksize = 1000000
 #i = 0
@@ -57,7 +57,7 @@ print(data)
 #    print('\rdata left {}\r'.format(len(data) - i), end='')
 #data.to_sql(name='census_ger', con=engine)
 
-#cursor.execute(query)
+cursor.execute(query)
 
 # Make sure data is committed to the database
 cnx.commit()
