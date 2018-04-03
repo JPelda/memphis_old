@@ -7,8 +7,7 @@ Created on Wed Feb 21 14:47:54 2018
 
 
 import pandas as pd
-import shapefile
-import pymysql
+
 
 
 class Conditioning:

@@ -13,7 +13,8 @@ from DataIO import DataIO
 from Conditioning import Conditioning
 from Allocation import Allocation
 
-test_DataIO = DataIO()
+test_DataIO = DataIO('config' + os.sep + 'config1.ini')
+print(test_DataIO.read_from_sqlServer())
 test_Conditioning = Conditioning()
 test_Allocation = Allocation()
 

@@ -5,14 +5,16 @@ Created on Wed Feb 21 10:40:53 2018
 @author: jpelda
 """
 
+import configparser as cfp
 import pandas as pd
 from sqlalchemy import create_engine
 
 
 class DataIO:
-    def __init__(self, config):
-        self.config
-        self.engine = create_engine(config[sql], echo=False)
+    def __init__(self, fname_config):
+        config = cfp.ConfigParser()
+        con = config.read(fname_config)
+        self.engine = create_engine(con['SQL']['db'], echo=False)
 
     def write_to_sqlServer(self, name, df):
         df.to_sql(name, self.engine, if_exists='replace')
