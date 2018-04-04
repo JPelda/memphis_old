@@ -7,7 +7,8 @@ Created on Wed Feb 21 14:47:54 2018
 
 
 import pandas as pd
-
+import pyproj as pp
+#from pyproj import Proj, transform
 
 
 class Conditioning:
@@ -26,7 +27,8 @@ class Conditioning:
 
 
 
-    def transform_coords(self, x, y, from_coord, into_coord):
+    def transform_coords(self, x, y,
+                         from_coord='epsg:3035', into_coord='epsg:4326'):
         '''
         input:  x as []
                 y as []
@@ -35,7 +37,8 @@ class Conditioning:
         out:    x as []
                 y as []
         '''
-        xy = transform(Proj(init=from_coord), Proj(init=into_coord), x, y)
+        xy = pp.transform(pp.Proj(init=from_coord), pp.Proj(init=into_coord),
+                          x, y)
         return xy[0], xy[1]
 
     def best_way_calculation(self):
@@ -43,8 +46,17 @@ class Conditioning:
         pass
 
 
-if __name__ == "__main__":
-    print('main')
 
+if __name__ == "__main__":
+    from Data_IO import Data_IO
+    import os
+
+    config = os.path.dirname(os.getcwd()) + os.sep +\
+            'config' + os.sep + 'test_config.ini'
+    Data = Data_IO(config)
+    df = Data.read_from_sqlServer('gis')
+    
+proj_in = Proj(init='epsg:3035')
+proj_out = Proj(init='epsg:4326')
 else:
-    print('else frm Conditioning')
+    print('Conditioning')
