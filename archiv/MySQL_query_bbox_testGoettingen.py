@@ -21,7 +21,7 @@ import pandas as pd
 from shapely.geometry import LineString, Point
 
 con = pymysql.connect(host='localhost', user='root',
-                             password='wasteheat', db='spatial')
+                             password='wasteheat', db='memphis')
 
 cur = con.cursor()
 xMin = 9.90519
