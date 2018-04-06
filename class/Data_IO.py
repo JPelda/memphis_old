@@ -22,21 +22,19 @@ class Data_IO:
         self.engine = create_engine(self.config['SQL']['db'], echo=False)
 
         GIS = self.config['SQL_QUERIES']
-        self.xMin = GIS['xMin']
-        self.yMin = GIS['yMin']
-        self.xMax = GIS['xMax']
-        self.yMax = GIS['yMax']
+        self.xMin = float(GIS['xMin'])
+        self.yMin = float(GIS['yMin'])
+        self.xMax = float(GIS['xMax'])
+        self.yMax = float(GIS['yMax'])
         coords = ((self.xMin, self.yMin),
                   (self.xMax, self.yMin),
                   (self.xMax, self.yMax),
                   (self.xMin, self.yMax),
                   (self.xMin, self.yMin))
         #  TODO instead of using self.bbox_f use self.bbox_s.wkt gives str
-        self.bbox_f = [(float(x), float(y)) for x, y in coords]
-        self.bbox_s = Polygon(self.bbox_f)
+        coords = [(x, y) for x, y in coords]
+        self.bbox = Polygon(coords)
         self.coord_system = GIS['coord_system']
-
-
 
     def write_to_sqlServer(self, table_name, df):
 
@@ -78,7 +76,7 @@ class Data_IO:
                 pass
             else:
                 bbox_transformed = transform_coords(
-                               [self.bbox_f],
+                               [list(self.bbox.exterior.coords)],
                                from_coord=self.coord_system,
                                into_coord=coord_system)
                 sql = ("SELECT {} FROM {} WHERE {} BETWEEN {} and {} and "
@@ -90,14 +88,16 @@ class Data_IO:
                                min(bbox_transformed[0])[1],
                                max(bbox_transformed[0])[1])
 
+
         else:
             sql = ("SELECT {} FROM {}").format(', '.join(col), table)
 
         df = pd.read_sql(sql, self.engine)
-        
+
         if coord_system == self.coord_system:
             if len(geo) is 1:
                 df['geo'] = df[col[0]].map(loads)
+
         elif coord_system != self.coord_system:
             if len(geo) == 1:
                 #  TODO something like in if --> if statement above
@@ -105,11 +105,13 @@ class Data_IO:
             else:
                 geometry = [(x, y) for
                             x, y in zip(df[geo[0]], df[geo[1]])]
+                df['len_x'] = len(set([x[0] for x in geometry]))
+                df['len_y'] = len(set([y[1] for y in geometry]))
                 geometry = transform_coords([geometry],
                                             from_coord=coord_system,
                                             into_coord=self.coord_system)
                 df['geo'] = [Point(x, y) for x, y in geometry[0]]
-        
+
         return df
 
 

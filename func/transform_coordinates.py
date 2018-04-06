@@ -37,16 +37,17 @@ def transform_coords(geo, from_coord='epsg:3035', into_coord='epsg:4326'):
     else:
         for i, item in enumerate(geo):
             geo_as_tuples[i] = [(x,y) for x, y in item]
-#        geo_as_tuples = geo
 
     #  conversion of coordinates
     geo_convert = [0]*len(geo)
     for i, tuples in enumerate(geo_as_tuples):
-        for x, y in tuples:
-            geo_convert[i] = [pp.transform(pp.Proj(init=from_coord),
+        x = [x[0] for x in tuples]
+        y = [x[1] for x in tuples]
+        geo_convert[i] = pp.transform(pp.Proj(init=from_coord),
                                     pp.Proj(init=into_coord),
-                                    x, y) for x, y in tuples]
-
+                                    x, y)
+        geo_convert[i] = [(x, y) for x, y in zip(geo_convert[i][0],
+                                             geo_convert[i][1])]
 
     # type(geo) shall be the output type
     ret = [0]*len(geo)
