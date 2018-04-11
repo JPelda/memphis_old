@@ -7,17 +7,19 @@ Created on Wed Feb 21 10:36:21 2018
 
 import os
 import sys
-sys.path.append(os.getcwd() + os.sep + 'class')
-sys.path.append(os.getcwd() + os.sep + 'func')
+
 import time
 import geopandas as gpd
+import matplotlib.pyplot as plt
+from shapely.geometry import Polygon, Point
+from matplotlib import rc
+import networkx as nx
+
+sys.path.append(os.getcwd() + os.sep + 'class')
+sys.path.append(os.getcwd() + os.sep + 'func')
 from Data_IO import Data_IO
 from Conditioning import Conditioning
 from Allocation import Allocation
-import matplotlib.pyplot as plt
-from shapely.geometry import Polygon, Point
-import numpy as np
-from matplotlib import rc
 #  TODO reproject data with geopandas better than transform coordinates?
 
 #########################################################################
@@ -26,8 +28,8 @@ from matplotlib import rc
 
 config = os.getcwd() + os.sep +\
         'config' + os.sep + 'test_config.ini'
-print('Load config from {}'.format(config))
 Data = Data_IO(config)
+
 gis = Data.read_from_sqlServer('gis')
 census = Data.read_from_sqlServer('census')
 
@@ -71,9 +73,18 @@ point = [poly[19]]
 test = {'geo': point}
 
 test = gpd.GeoDataFrame(test, crs=Data.coord_system, geometry='geo')
+
+#for line in gis_gdf['geo']:
+#    for line1 in gis_gdf['geo']:
+#        line.intersects(line1)
+
+#G = nx.Graph()
+#G.add_nodes_from(gis_coords_doubles)
+#nx.draw(G)
 #########################################################################
 # A L L O C A T I O N
 #########################################################################
+
 
 
 
@@ -106,9 +117,9 @@ rc('legend', fontsize='small')
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
+
 #census_gdf.plot(ax=ax)
 gis_gdf.plot(ax=ax, color='black', linewidth=0.3, alpha=1)
-
 
 vmin = 0
 vmax = 50
@@ -126,4 +137,3 @@ colorBar.ax.set_title('inhabitans',
 plt.show()
 fig.savefig('Göttingen' + '.pdf',
             filentype='pdf', bbox_inches='tight', dpi=600)
-#fig.clear()

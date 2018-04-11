@@ -20,13 +20,13 @@ import igraph
 from shapely.geometry import LineString, Point
 
 con_spatial = pymysql.connect(host='localhost', user='root',
-                             password='wasteheat', db='spatial')
+                             password='wasteheat', db='memphis')
 con_memphis = pymysql.connect(host='localhost', user='root',
                              password='wasteheat', db='memphis')
 
 cur_spatial = con_spatial.cursor()
 cur_memphis = con_memphis.cursor()
-engine = sqla.create_engine('mysql+pymysql://root:wasteheat@localhost:3306/spatial', echo=False)
+engine = sqla.create_engine('mysql+pymysql://root:wasteheat@localhost:3306/memphis', echo=False)
 #query = ("SELECT * FROM `spatial` WHERE osm_id = {} ").format(4262992)
 #query_spatial = ("SELECT ST_ASText(SHAPE), osm_id, name FROM `goettingen` "
 #                 "WHERE code IN ( "

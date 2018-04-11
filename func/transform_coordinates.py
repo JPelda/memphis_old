@@ -9,16 +9,19 @@ from shapely.geometry import Point, LineString, Polygon
 import pyproj as pp
 
 def transform_coords(geo, from_coord='epsg:3035', into_coord='epsg:4326'):
+    '''Transforms coordinates from given to requested coordinate system.
+    
+    Args:
+        geo: [[x]], x is either Polygon, LineString, Point or (f,f)*i)
+        from_coord: str, coordinate system given
+        into_coord: str, coordinate system requested
+    
+    Returns:
+        type(geo) transformed to into_coord
     '''
-    input:  geo as [[x]] (x is either Polygons, LineStrings, or (f,f)*i)
-            from_coord as str
-            into_coord as str
-    out:    shapely.Geometry
 
-    '''
     geo_as_tuples = [0]*len(geo)
-    geo_type = type(geo[0][0])
-
+    geo_type = type(geo[0])
     '''
     pp.transform needs tuples of floats to convert,
     here input is converted into tuples
@@ -33,7 +36,7 @@ def transform_coords(geo, from_coord='epsg:3035', into_coord='epsg:4326'):
             geo_as_tuples[i] = [(x, y) for x, y in list(line.coords)]
     elif geo_type == Point:
         for i, point in enumerate(geo):
-            geo_as_tuples[i] = [(x.coords[0][0], x.coords[0][1]) for x in point]
+            geo_as_tuples[i] = [(point.coords[0][0], point.coords[0][1])]
     else:
         for i, item in enumerate(geo):
             geo_as_tuples[i] = [(x,y) for x, y in item]
