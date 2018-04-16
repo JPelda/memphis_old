@@ -7,25 +7,35 @@ Created on Wed Feb 21 10:40:53 2018
 
 import os
 import sys
-sys.path.append(os.path.dirname(os.getcwd()) + os.sep + 'func')
+
 import configparser as cfp
 import pandas as pd
 from shapely.geometry import Point, LineString, Polygon
 from shapely.wkt import loads
+import shapely.wkb
 from sqlalchemy import create_engine
-from transform_coordinates import transform_coords
+from geoalchemy2 import Geometry, WKTElement
 from osgeo import ogr
+import time
+from sqlalchemy import types
+import itertools
+
+
+sys.path.append(os.path.dirname(os.getcwd()) + os.sep + 'func')
+from transform_coordinates import transform_coords
+
 
 class Data_IO:
     '''Access to all sql queries. Initialised by config.ini.
-    
+
     fname_config: str, the config filename
     '''
     def __init__(self, fname_config):
         print('Load config from {}'.format(fname_config))
         self.config = cfp.ConfigParser()
         self.config.read(fname_config)
-        self.engine = create_engine(self.config['SQL']['db'], echo=False)
+        self.engine = create_engine(self.config['SQL']['db'], echo=False,
+                                    encoding='utf-8')
 
         GIS = self.config['SQL_QUERIES']
         self.xMin = float(GIS['xMin'])
@@ -40,19 +50,64 @@ class Data_IO:
         self.bbox = Polygon(coords)
         self.coord_system = GIS['coord_system']
 
+    def write_to_sqlServer(self, table_name, df, dtype={}):
+        '''Writes to SQL-Database.
 
-    def write_to_sqlServer(self, table_name, df):
+        Args:
+            table_name: str, name of table to write to
+            df: pandas.DataFrame(), which values are written to table
 
-        df.to_sql(table_name, self.engine, if_exists='replace')
-        ('Saved Data to {} in db {}'.format(table_name, self.engine))
+        Kwargs:
+            dtype: dict, {col: type} type is of int, float, or geometry etc.
+
+        Returns:
+
+        '''
+        print('Save data to {} in db {}'.format(table_name, self.engine))
+
+        if 'GEOMETRY' in dtype.values():
+            name = list(dtype.keys())[list(dtype.values()).index('GEOMETRY')]
+            print(name)
+            col = [x + ' ' + dtype[x] for x in dtype]
+            sql_new_table = ("CREATE OR REPLACE TABLE `{}` "
+                             "({})COLLATE='utf8_bin'").format(table_name,
+                                                              ', '.join(col))
+
+            df[name] = ["ST_GEOMFROMTEXT('{}', {})".format(x, 4326) for
+                           x in df[name]]
+
+            data = list(df.itertuples(index=False, name=None))
+            data = str(data).strip('[]')
+            data = data.replace('"', '')
+
+            sql = "INSERT INTO `{}` ({}) VALUES {}".format(
+                    table_name, ', '.join(dtype.keys()), data)
+            sql_types = "ALTER TABLE `raster_visual` "\
+                        "ALTER COLUMN `{}` TYPE GEOMETRY(`POLYGON`, 4326) "\
+                        .format(name, name)
+            conn = self.engine.connect()
+#            conn.execute(sql_new_table)
+#            conn.execute(sql)
+            #  TODO is it possible to update table after loading data in?
+            #  The advantage is, that dtype has not to be defined previously,
+            #  pandas.to_sql will do it.
+            df.to_sql(table_name, self.engine, if_exists='replace',
+                      index=False)
+            conn.execute(sql_types)
+            conn.close()
+
+        else:
+            df.to_sql(table_name, self.engine, if_exists='replace',
+                      index=False)
+        print("Saved.")
 
     def read_from_sqlServer(self, name):
-        '''Reads SQL-Database into pandas dataframe, which is worked on.
-        
+        '''Reads SQL-Database into pandas dataframe.
+
         Args:
             sql_query: str, name of sql-query in section SQL_QUERIES
                         in config-file
-        
+
         Returns:
             pandas.DataFrame(sql-db)
         '''
@@ -62,7 +117,6 @@ class Data_IO:
         col = conf['col']
         coord_system = conf['coord_system']
 
-
         if coord_system == self.coord_system:
             bbox = self.bbox
 
@@ -71,9 +125,15 @@ class Data_IO:
                                     from_coord=self.coord_system,
                                     into_coord=coord_system)[0]
 
-        if len(col['geo']) is 1:
+        # TODO change import via ST_GEOMFROMTEXT to WKB import.
+        # https://www.gaia-gis.it/gaia-sins/spatialite-cookbook/html/wkt-wkb.html
+        # Import as string = ST_AsBinary(name)
+        # ST_GeomFromWKB(x'01010000008D976E1283C0F33F16FBCBEEC9C30240')
+        # shapely.wkb.loads(string)
+        if len(col['SHAPE']) is 1:
             sql = self.select_from_where_mbrContains(col, table, bbox)
-        elif len(col['geo']) is 2:
+
+        elif len(col['SHAPE']) is 2:
             sql = self.select_from_where_between(col, table, bbox)
 
         else:
@@ -82,28 +142,28 @@ class Data_IO:
         df = pd.read_sql(sql, self.engine)
 
         if coord_system == self.coord_system:
-            if len(col['geo']) is 1:
+            if len(col['SHAPE']) is 1:
                 #  TODO find lgenth of x and y values
-                df['geo'] = df[col['geo'][0]].map(loads)
+                df['SHAPE'] = df[col['SHAPE'][0]].map(loads)
             else:
                 pass
 
         elif coord_system != self.coord_system:
-            if len(col['geo']) == 1:
+            if len(col['SHAPE']) == 1:
                 #  TODO find length of x and y values
-                df['geo'] = transform_coords([df[col['geo'][0]].map(loads)],
+                df['SHAPE'] = transform_coords([df[col['SHAPE'][0]].map(loads)],
                                              from_coord=coord_system,
                                              into_coord=self.coord_system)
-            elif len(col['geo']) == 2:
-                df['len_x'] = len(set(df[col['geo'][0]]))
-                df['len_y'] = len(set(df[col['geo'][1]]))
-                geometry = transform_coords(
+            elif len(col['SHAPE']) == 2:
+                df['len_x'] = len(set(df[col['SHAPE'][0]]))
+                df['len_y'] = len(set(df[col['SHAPE'][1]]))
+                SHAPEmetry = transform_coords(
                         [Point(x, y) for x, y in zip(
-                                df[col['geo'][0]],
-                                df[col['geo'][1]])],
+                                df[col['SHAPE'][0]],
+                                df[col['SHAPE'][1]])],
                         from_coord=coord_system,
                         into_coord=self.coord_system)
-                df['geo'] = geometry
+                df['SHAPE'] = SHAPEmetry
 
         return df
 
@@ -111,10 +171,10 @@ class Data_IO:
         sql = ("SELECT {} FROM {} WHERE {} BETWEEN {} and {} and "
                "{} BETWEEN {} and {}").format(
                        ', '.join(self.dict_of_nested_lists_to_list(col)),
-                       table, col['geo'][0],
+                       table, col['SHAPE'][0],
                        min(bbox.exterior.coords.xy[0]),
                        max(bbox.exterior.coords.xy[0]),
-                       col['geo'][1],
+                       col['SHAPE'][1],
                        min(bbox.exterior.coords.xy[1]),
                        max(bbox.exterior.coords.xy[1]))
         return sql
@@ -123,7 +183,7 @@ class Data_IO:
         sql = ("SELECT {} FROM {} WHERE MBRContains({}, ST_GEOMFROMTEXT({})) = 1"
                ).format(', '.join(self.dict_of_nested_lists_to_list(col)),
                         table, self.st_geofromtext_geometry(bbox),
-                        ', '.join(col['geo']))
+                        ', '.join(col['SHAPE']))
         return sql
 
     def st_geofromtext_geometry(self, geometry):

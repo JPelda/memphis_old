@@ -14,6 +14,9 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, Point
 from matplotlib import rc
 import networkx as nx
+import osmnx
+from geoalchemy2 import Geometry
+from shapely.wkb import loads
 
 sys.path.append(os.getcwd() + os.sep + 'class')
 sys.path.append(os.getcwd() + os.sep + 'func')
@@ -25,7 +28,7 @@ from Allocation import Allocation
 #########################################################################
 # LOAD DATA
 #########################################################################
-
+start_time = time.time()
 config = os.getcwd() + os.sep +\
         'config' + os.sep + 'test_config.ini'
 Data = Data_IO(config)
@@ -33,14 +36,14 @@ Data = Data_IO(config)
 gis = Data.read_from_sqlServer('gis')
 census = Data.read_from_sqlServer('census')
 
-census_gdf = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='geo')
-gis_gdf = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='geo')
+census_gdf = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='SHAPE')
+gis_gdf = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
+graph = osmnx.graph_from_polygon(Data.bbox)
 
 
 #########################################################################
 # C O N D I T I O N I N G
 #########################################################################
-s_time = time.time()
 
 census_length_x = census['len_x'][0]
 census_length_y = census['len_y'][0]
@@ -62,17 +65,18 @@ poly = [Polygon(((point.x - delta_x, point.y - delta_y),
                 (point.x + delta_x, point.y + delta_y),
                 (point.x - delta_x, point.y + delta_y),
                 (point.x - delta_x, point.y - delta_y))) for
-                        point in census['geo']]
+                        point in census['SHAPE']]
 inhabitans = [x for x in census['inhabitans']]
 
-raster = {'geo': poly, 'inhabitans': inhabitans}
-raster = gpd.GeoDataFrame(raster, crs=Data.coord_system, geometry='geo')
+raster = {'SHAPE': poly, 'inhabitans': inhabitans}
+raster = gpd.GeoDataFrame(raster, crs=Data.coord_system, geometry='SHAPE')
 
-point = [Point(Data.xMin, Data.yMin)]
-point = [poly[19]]
-test = {'geo': point}
 
-test = gpd.GeoDataFrame(test, crs=Data.coord_system, geometry='geo')
+#point = [Point(Data.xMin, Data.yMin)]
+#point = [poly[19]]
+#test = {'geo': point}
+#
+#test = gpd.GeoDataFrame(test, crs=Data.coord_system, geometry='geo')
 
 #for line in gis_gdf['geo']:
 #    for line1 in gis_gdf['geo']:
@@ -118,8 +122,17 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 
 
-#census_gdf.plot(ax=ax)
+#  Data.write_to_sqlServer('gis_visual', gis_gdf)
+
+graph_gdf_nodes, graph_gdf_edges = osmnx.save_load.graph_to_gdfs(
+        graph,
+        nodes=True, edges=True,
+        node_geometry=True,
+        fill_edge_geometry=False)
+
 gis_gdf.plot(ax=ax, color='black', linewidth=0.3, alpha=1)
+graph_gdf_nodes.plot(ax=ax, color='red', markersize=0.2)
+graph_gdf_edges.plot(ax=ax, color='green', linewidth=0.3, alpha=1)
 
 vmin = 0
 vmax = 50
@@ -133,7 +146,38 @@ colorBar = plt.colorbar(sm)
 #        colorBar.set_label("Q [kW]", horizontalalignment='right')
 colorBar.ax.set_title('inhabitans',
                       horizontalalignment='left', fontsize=10)
-#test.plot(ax=ax, color="red", alpha=1)
+#  test.plot(ax=ax, color="red", alpha=1)
 plt.show()
 fig.savefig('Göttingen' + '.pdf',
-            filentype='pdf', bbox_inches='tight', dpi=600)
+            filetype='pdf', bbox_inches='tight', dpi=600)
+
+
+Data.write_to_sqlServer('raster_visual', raster)
+#  Data.write_to_sqlServer('gis_visual', gis_gdf, dtype=)
+Data.write_to_sqlServer('graph_nodes', graph_gdf_nodes,
+                        dtype={'highway': 'varchar(20)',
+                               'osmid': 'int',
+                               'x': 'float',
+                               'y': 'float',
+                               'geometry': 'GEOMETRY'})
+#Data.write_to_sqlServer('graph_edges', graph_gdf_edges,
+#                        dtype={'access': 'varchar(10)',
+#                               'area':
+#                               'bridge': 'varchar(10)',
+#                               'est_width': 'varchar(10)',
+#                               'geometry': 'GEOMETRY',
+#                               'highway': 'varchar(10)',
+#                               'key': 'int',
+#                               'lanes': 'varchar(10)',
+#                               'length': 'float(6)',
+#                               'maxspeed': 'int(3)',
+#                               'name': 'varchar(20)',
+#                               'oneway': 'bool',
+#                               'osmid': 'int',
+#                               'ref': 'varchar(15)',
+#                               'service': 'varchar(20)',
+#                               'tunnel': 'varchar(20)',
+#                               'u': 'int',
+#                               'v': 'int',
+#                               'width': 'float'})
+                        
