@@ -7,13 +7,15 @@ Created on Wed Feb 21 14:47:54 2018
 
 
 import pandas as pd
-import shapefile
-import pymysql
-
+import pyproj as pp
+from osgeo import ogr
+from osgeo import osr
+import osgeo
+import shapely
 
 class Conditioning:
-    def __init__(self):
-        pass
+    def __init__(self, df):
+        self.df = df
 
 #    def read_polygon_from_shp(self, shapefile):
 #        #TODO read buildingsshp(shapefile, fiona, or ogr)of bbox selection
@@ -27,25 +29,26 @@ class Conditioning:
 
 
 
-    def transform_coords(self, x, y, from_coord, into_coord):
-        '''
-        input:  x as []
-                y as []
-                from_coord as string
-                into_coord as string
-        out:    x as []
-                y as []
-        '''
-        xy = transform(Proj(init=from_coord), Proj(init=into_coord), x, y)
-        return xy[0], xy[1]
-
     def best_way_calculation(self):
         # TODO wighted graph ways + nodes find shortest way (ask Script Pascal)
         pass
 
 
+
 if __name__ == "__main__":
-    print('main')
+    from Data_IO import Data_IO
+    import os
+
+    config = os.path.dirname(os.getcwd()) + os.sep +\
+            'config' + os.sep + 'test_config.ini'
+    Data = Data_IO(config)
+
+    gis = Data.read_from_sqlServer('gis')
+    
+    census = Data.read_from_sqlServer('census')
+    print(df.keys())
+    Cond = Conditioning()
+    Cond.transform_coords(['x','y'])
 
 else:
-    print('else frm Conditioning')
+    pass

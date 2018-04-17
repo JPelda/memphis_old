@@ -7,76 +7,177 @@ Created on Wed Feb 21 10:36:21 2018
 
 import os
 import sys
-sys.path.append(os.getcwd() + os.sep + 'class')
 
-from DataIO import DataIO
+import time
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from shapely.geometry import Polygon, Point
+from matplotlib import rc
+import networkx as nx
+import osmnx
+from geoalchemy2 import Geometry
+from shapely.wkb import loads
+
+sys.path.append(os.getcwd() + os.sep + 'class')
+sys.path.append(os.getcwd() + os.sep + 'func')
+from Data_IO import Data_IO
 from Conditioning import Conditioning
 from Allocation import Allocation
+#  TODO reproject data with geopandas better than transform coordinates?
 
-test_DataIO = DataIO()
-test_Conditioning = Conditioning()
-test_Allocation = Allocation()
+#########################################################################
+# LOAD DATA
+#########################################################################
+start_time = time.time()
+config = os.getcwd() + os.sep +\
+        'config' + os.sep + 'test_config.ini'
+Data = Data_IO(config)
+
+gis = Data.read_from_sqlServer('gis')
+census = Data.read_from_sqlServer('census')
+
+census_gdf = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='SHAPE')
+gis_gdf = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
+graph = osmnx.graph_from_polygon(Data.bbox)
 
 
 #########################################################################
 # C O N D I T I O N I N G
+#########################################################################
 
-#########
-# INPUT
-#########
-df_geo = test_DataIO.read_from_sqlServer()
-df_census = test_DataIO.read_from_sqlServer()
+census_length_x = census['len_x'][0]
+census_length_y = census['len_y'][0]
+census_x_length = Data.xMax - Data.xMin
+census_y_length = Data.yMax - Data.yMin
 
-
-##############
-# Conditioning
-##############
-
-
-df_geo['centroid'] = test_Conditioning.get_centroid(df_geo['SHAPE'])
-x, y = test_Conditioning.transform_coords(self, x, y, coord_system)
-
-########
-# OUTPUT
-########
+factor = 1.9
+delta = census_x_length/census_length_x
+border = delta / factor
+delta_x = census_x_length/census_length_x - border
+delta = census_y_length/census_length_y
+border = delta / factor
+delta_y = census_y_length/census_length_y - border
 
 
-# write df_geo with centroids to db
-from DataIO import write_to_sql_Server
-write_DataCentroid = wirte_to_sqlServer
-# df_geo.to_sql('centroid', engine, if_exists='replace', index=True)
-# oder in DataIO?
 
-# Print Graph
-# TODO df_geo into Graph
+poly = [Polygon(((point.x - delta_x, point.y - delta_y),
+                (point.x + delta_x, point.y - delta_y),
+                (point.x + delta_x, point.y + delta_y),
+                (point.x - delta_x, point.y + delta_y),
+                (point.x - delta_x, point.y - delta_y))) for
+                        point in census['SHAPE']]
+inhabitans = [x for x in census['inhabitans']]
+
+raster = {'SHAPE': poly, 'inhabitans': inhabitans}
+raster = gpd.GeoDataFrame(raster, crs=Data.coord_system, geometry='SHAPE')
 
 
-###########################################################################
+#point = [Point(Data.xMin, Data.yMin)]
+#point = [poly[19]]
+#test = {'geo': point}
+#
+#test = gpd.GeoDataFrame(test, crs=Data.coord_system, geometry='geo')
+
+#for line in gis_gdf['geo']:
+#    for line1 in gis_gdf['geo']:
+#        line.intersects(line1)
+
+#G = nx.Graph()
+#G.add_nodes_from(gis_coords_doubles)
+#nx.draw(G)
+#########################################################################
 # A L L O C A T I O N
-
-#########
-# INPUT
-#########
-df_census_auswahl = DATAFRAME-AUS-MySQL_transf_coord.py() # TODO da drin df
-# umbenennen
-df_inhabitants = allocation
-
-##############
-# Allocation
-##############
+#########################################################################
 
 
-########
-# OUTPUT
-########
-
-# TODO ## df.to_sql('iPsQm', engine, if_exists='replace', index=True)
-# DB MEMPHIS_Output DB-Table name 'Inhabitants'
-
-# df_wastewater.to_sql('iPsqm', engine, if_exists='replace', index=True)
-# DB-Table name 'WastewaterflowOUT' im DB MEMPHIS_Output
 
 
-# df_sewagewater.to_sql  save df to sql "MEMPHIS_Output.sewage_flows"
-# as new table
+#########################################################################
+# V I S U A L I S A T I O N
+#########################################################################
+rc('text', usetex=True)
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+#        rc('font', serif='malgunbd')
+rc('ps', usedistiller='xpdf')
+rc('pdf', fonttype=42)
+rc('ps', fonttype=42)
+rc('figure', figsize = [4, 2.25])
+grid_linewidth = 0.3
+xyLabelsize=8
+labelsize = 8
+rc('lines', lw = 1.3, c='r', ls='-', dash_capstyle='round',
+   solid_capstyle='round')
+rc('axes', grid=False, lw=grid_linewidth)
+rc('grid', ls='dotted', lw=grid_linewidth, alpha=1)
+rc('xtick', direction='in', labelsize=labelsize)
+rc('xtick.major', width=grid_linewidth, size=5)
+rc('xtick.minor', width=grid_linewidth, size=4)
+rc('xtick', labelsize=xyLabelsize)
+rc('ytick', direction='in', labelsize=labelsize)
+rc('ytick.major', width=grid_linewidth, size=5)
+rc('ytick.minor', width=grid_linewidth, size=4)
+rc('ytick', labelsize=xyLabelsize)
+rc('legend', fontsize='small')
+fig = plt.figure()
+ax = fig.add_subplot(111)
 
+
+#  Data.write_to_sqlServer('gis_visual', gis_gdf)
+
+graph_gdf_nodes, graph_gdf_edges = osmnx.save_load.graph_to_gdfs(
+        graph,
+        nodes=True, edges=True,
+        node_geometry=True,
+        fill_edge_geometry=False)
+
+gis_gdf.plot(ax=ax, color='black', linewidth=0.3, alpha=1)
+graph_gdf_nodes.plot(ax=ax, color='red', markersize=0.2)
+graph_gdf_edges.plot(ax=ax, color='green', linewidth=0.3, alpha=1)
+
+vmin = 0
+vmax = 50
+cmap = plt.cm.coolwarm
+raster.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax,
+            column='inhabitans', alpha=0.3)
+sm = plt.cm.ScalarMappable(cmap=cmap,
+                           norm=plt.Normalize(vmin=vmin, vmax=vmax))
+sm._A = []
+colorBar = plt.colorbar(sm)
+#        colorBar.set_label("Q [kW]", horizontalalignment='right')
+colorBar.ax.set_title('inhabitans',
+                      horizontalalignment='left', fontsize=10)
+#  test.plot(ax=ax, color="red", alpha=1)
+plt.show()
+fig.savefig('Göttingen' + '.pdf',
+            filetype='pdf', bbox_inches='tight', dpi=600)
+
+
+Data.write_to_sqlServer('raster_visual', raster)
+#  Data.write_to_sqlServer('gis_visual', gis_gdf, dtype=)
+Data.write_to_sqlServer('graph_nodes', graph_gdf_nodes,
+                        dtype={'highway': 'varchar(20)',
+                               'osmid': 'int',
+                               'x': 'float',
+                               'y': 'float',
+                               'geometry': 'GEOMETRY'})
+#Data.write_to_sqlServer('graph_edges', graph_gdf_edges,
+#                        dtype={'access': 'varchar(10)',
+#                               'area':
+#                               'bridge': 'varchar(10)',
+#                               'est_width': 'varchar(10)',
+#                               'geometry': 'GEOMETRY',
+#                               'highway': 'varchar(10)',
+#                               'key': 'int',
+#                               'lanes': 'varchar(10)',
+#                               'length': 'float(6)',
+#                               'maxspeed': 'int(3)',
+#                               'name': 'varchar(20)',
+#                               'oneway': 'bool',
+#                               'osmid': 'int',
+#                               'ref': 'varchar(15)',
+#                               'service': 'varchar(20)',
+#                               'tunnel': 'varchar(20)',
+#                               'u': 'int',
+#                               'v': 'int',
+#                               'width': 'float'})
+                        

@@ -58,6 +58,7 @@ proj_in = Proj(init='epsg:3035')
 proj_out = Proj(init='epsg:4326')
 i = 0
 data_converted = [[0]*len(list(data))]*len(data)
+print(data)
 
 for ID_item, x_item, y_item, val_item in zip(data[ID], data[x], data[y],
                                       data[val]):

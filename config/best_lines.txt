@@ -1,0 +1,7 @@
+data = "(ST_GEOMFROMTEXT('POINT(1 1)'), 2)"
+
+sql = "INSERT INTO `{}` ({}) VALUES {}".format(table_name,
+                    ', '.join(dtype.keys()), data)
+
+Does a buffer in square around point g
+a = g.buffer(1.0, cap_style=3, join_style=1)
