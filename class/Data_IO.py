@@ -83,22 +83,18 @@ class Data_IO:
             sql = "INSERT INTO `{}` ({}) VALUES {}".format(
                     table_name, ', '.join(dtype.keys()), data)
             sql_types = "ALTER TABLE `raster_visual` "\
-                        "ALTER COLUMN `{}` TYPE GEOMETRY(`POLYGON`, 4326) "\
+                        "MODIFY COLUMN `{}` GEOMETRY "\
                         .format(name, name)
+
             conn = self.engine.connect()
-#            conn.execute(sql_new_table)
-#            conn.execute(sql)
-            #  TODO is it possible to update table after loading data in?
-            #  The advantage is, that dtype has not to be defined previously,
-            #  pandas.to_sql will do it.
-            df.to_sql(table_name, self.engine, if_exists='replace',
-                      index=False)
-            conn.execute(sql_types)
+            conn.execute(sql_new_table)
+            conn.execute(sql)
             conn.close()
 
         else:
             df.to_sql(table_name, self.engine, if_exists='replace',
                       index=False)
+
         print("Saved.")
 
     def read_from_sqlServer(self, name):
@@ -115,56 +111,60 @@ class Data_IO:
         conf = eval(self.config['SQL_QUERIES'][name])
         table = conf['table']
         col = conf['col']
-        coord_system = conf['coord_system']
 
-        if coord_system == self.coord_system:
-            bbox = self.bbox
+        if 'coord_system' in conf.keys():
+            coord_system = conf['coord_system']
 
-        elif coord_system != self.coord_system:
-            bbox = transform_coords([self.bbox],
-                                    from_coord=self.coord_system,
-                                    into_coord=coord_system)[0]
+            if coord_system == self.coord_system:
+                bbox = self.bbox
+            elif coord_system != self.coord_system and\
+                    coord_system is not None:
+                bbox = transform_coords([self.bbox],
+                                        from_coord=self.coord_system,
+                                        into_coord=coord_system)[0]
 
         # TODO change import via ST_GEOMFROMTEXT to WKB import.
         # https://www.gaia-gis.it/gaia-sins/spatialite-cookbook/html/wkt-wkb.html
         # Import as string = ST_AsBinary(name)
         # ST_GeomFromWKB(x'01010000008D976E1283C0F33F16FBCBEEC9C30240')
         # shapely.wkb.loads(string)
-        if len(col['SHAPE']) is 1:
-            sql = self.select_from_where_mbrContains(col, table, bbox)
+        if 'SHAPE' in col.keys():
+            if len(col['SHAPE']) is 1:
+                sql = self.select_from_where_mbrContains(col, table, bbox)
 
-        elif len(col['SHAPE']) is 2:
-            sql = self.select_from_where_between(col, table, bbox)
-
+            elif len(col['SHAPE']) is 2:
+                sql = self.select_from_where_between(col, table, bbox)
         else:
-            sql = self.__select_from(col, table)
+            sql = self.select_from(col, table)
 
         df = pd.read_sql(sql, self.engine)
 
-        if coord_system == self.coord_system:
-            if len(col['SHAPE']) is 1:
-                #  TODO find lgenth of x and y values
-                df['SHAPE'] = df[col['SHAPE'][0]].map(loads)
-            else:
-                pass
+        if 'coord_system' in conf.keys():
+            if coord_system == self.coord_system:
+                if len(col['SHAPE']) is 1:
+                    #  TODO find lgenth of x and y values
+                    df['SHAPE'] = df[col['SHAPE'][0]].map(loads)
 
-        elif coord_system != self.coord_system:
-            if len(col['SHAPE']) == 1:
-                #  TODO find length of x and y values
-                df['SHAPE'] = transform_coords([df[col['SHAPE'][0]].map(loads)],
-                                             from_coord=coord_system,
-                                             into_coord=self.coord_system)
-            elif len(col['SHAPE']) == 2:
-                df['len_x'] = len(set(df[col['SHAPE'][0]]))
-                df['len_y'] = len(set(df[col['SHAPE'][1]]))
-                SHAPEmetry = transform_coords(
+            elif coord_system != self.coord_system and\
+                    coord_system is not None:
+                if len(col['SHAPE']) == 1:
+                    #  TODO find length of x and y values
+                    df['SHAPE'] = transform_coords(
+                        [df[col['SHAPE'][0]].map(loads)],
+                        from_coord=coord_system,
+                        into_coord=self.coord_system)
+                elif len(col['SHAPE']) == 2:
+                    df['len_x'] = len(set(df[col['SHAPE'][0]]))
+                    df['len_y'] = len(set(df[col['SHAPE'][1]]))
+                    SHAPEmetry = transform_coords(
                         [Point(x, y) for x, y in zip(
                                 df[col['SHAPE'][0]],
                                 df[col['SHAPE'][1]])],
                         from_coord=coord_system,
                         into_coord=self.coord_system)
-                df['SHAPE'] = SHAPEmetry
-
+                    df['SHAPE'] = SHAPEmetry
+        if 'SHAPE' in df.keys():
+            del df[col['SHAPE'][0]]
         return df
 
     def select_from_where_between(self, col, table, bbox):
@@ -191,9 +191,11 @@ class Data_IO:
         return ("ST_GEOMFROMTEXT('{}')").format(geom)
 
     def select_from(self, col, table):
-        sql = ("SELECT {} FROM {}").format(
-                ', '.join(self.dict_of_nested_lists_to_list(col)), table)
+        col = col.values()
+        sql = ("SELECT {} FROM {}").format(', '.join([x for x in col if
+                                                      x is not None]), table)
         return sql
+
 
     def dict_of_nested_lists_to_list(self, dictionary):
         dictionary = [dictionary[x] for x in dictionary.keys()]

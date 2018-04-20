@@ -1,0 +1,38 @@
+\hypertarget{class_allocation_1_1_allocation}{}\section{Allocation Class Reference}
+\label{class_allocation_1_1_allocation}\index{Allocation@{Allocation}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_allocation_1_1_allocation_ae64f0875afe3067b97ba370b354b9213}\label{class_allocation_1_1_allocation_ae64f0875afe3067b97ba370b354b9213}} 
+def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self)
+\item 
+def \hyperlink{class_allocation_1_1_allocation_a4f3cfc22a96cefe107f4dd3385036d47}{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons} (self, polygons, census)
+\item 
+\mbox{\Hypertarget{class_allocation_1_1_allocation_ac6d387ff27b96beb3969516234e66f97}\label{class_allocation_1_1_allocation_ac6d387ff27b96beb3969516234e66f97}} 
+def {\bfseries calculate\+\_\+wastewaterflow} (self, sql\+\_\+query, engine)
+\item 
+\mbox{\Hypertarget{class_allocation_1_1_allocation_aeec06a5d0d02edd0a7f51b59e7a3959e}\label{class_allocation_1_1_allocation_aeec06a5d0d02edd0a7f51b59e7a3959e}} 
+def {\bfseries allocate\+\_\+centroids} (self)
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_allocation_1_1_allocation_a4f3cfc22a96cefe107f4dd3385036d47}\label{class_allocation_1_1_allocation_a4f3cfc22a96cefe107f4dd3385036d47}} 
+\index{Allocation\+::\+Allocation@{Allocation\+::\+Allocation}!allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons@{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons}}
+\index{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons@{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons}!Allocation\+::\+Allocation@{Allocation\+::\+Allocation}}
+\subsubsection{\texorpdfstring{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons()}{allocate\_censusgrid\_to\_polygons()}}
+{\footnotesize\ttfamily def allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{polygons,  }\item[{}]{census }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}input:   polygons as np.array([Polygon(coords), area])
+ census as np.array([Polygon(x0, y0, x1, y1]))
+All innputs must be in same coordinate system. Output is the input's
+coordinate system
+
+output:  ('polygons', inhab)
+Order of output array of polygons is same like input array of polygons.
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/jpelda/\+Documents/\+Git\+Hub/memphis/class/Allocation.\+py\end{DoxyCompactItemize}
