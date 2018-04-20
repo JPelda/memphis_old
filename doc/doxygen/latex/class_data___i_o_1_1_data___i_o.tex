@@ -1,0 +1,100 @@
+\hypertarget{class_data___i_o_1_1_data___i_o}{}\section{Data\+\_\+\+IO Class Reference}
+\label{class_data___i_o_1_1_data___i_o}\index{Data\+\_\+\+IO@{Data\+\_\+\+IO}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a2c3f3798c40e8cb1f9ed65d04ee19236}\label{class_data___i_o_1_1_data___i_o_a2c3f3798c40e8cb1f9ed65d04ee19236}} 
+def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self, fname\+\_\+config)
+\item 
+def \hyperlink{class_data___i_o_1_1_data___i_o_adf0ca5cf816de8cfc624b287103b4f03}{write\+\_\+to\+\_\+sql\+Server} (self, table\+\_\+name, df, dtype=\{\})
+\item 
+def \hyperlink{class_data___i_o_1_1_data___i_o_a6af825f0682e54cbb22f57a189a6fcc8}{read\+\_\+from\+\_\+sql\+Server} (self, name)
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_ad07b011979322cd9aec6aa0a4370d525}\label{class_data___i_o_1_1_data___i_o_ad07b011979322cd9aec6aa0a4370d525}} 
+def {\bfseries select\+\_\+from\+\_\+where\+\_\+between} (self, col, table, bbox)
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a6c4587c6494487c851d683869e3ec760}\label{class_data___i_o_1_1_data___i_o_a6c4587c6494487c851d683869e3ec760}} 
+def {\bfseries select\+\_\+from\+\_\+where\+\_\+mbr\+Contains} (self, col, table, bbox)
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_ab7a08a7ec816e305f8f9cfa0ef22293c}\label{class_data___i_o_1_1_data___i_o_ab7a08a7ec816e305f8f9cfa0ef22293c}} 
+def {\bfseries st\+\_\+geofromtext\+\_\+geometry} (self, geometry)
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a2c90144978230ecac5dd96c117e99de4}\label{class_data___i_o_1_1_data___i_o_a2c90144978230ecac5dd96c117e99de4}} 
+def {\bfseries select\+\_\+from} (self, col, table)
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a1c62d4808ce8b7b0606e6c98319f9da3}\label{class_data___i_o_1_1_data___i_o_a1c62d4808ce8b7b0606e6c98319f9da3}} 
+def {\bfseries dict\+\_\+of\+\_\+nested\+\_\+lists\+\_\+to\+\_\+list} (self, dictionary)
+\end{DoxyCompactItemize}
+\subsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_ad2256458892609d0533df5d72a7257ad}\label{class_data___i_o_1_1_data___i_o_ad2256458892609d0533df5d72a7257ad}} 
+{\bfseries config}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a4720cf3b5a198cd8121ea0e55bdb2954}\label{class_data___i_o_1_1_data___i_o_a4720cf3b5a198cd8121ea0e55bdb2954}} 
+{\bfseries engine}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a14458fd88d7e32efa9171dc573b16ee0}\label{class_data___i_o_1_1_data___i_o_a14458fd88d7e32efa9171dc573b16ee0}} 
+{\bfseries x\+Min}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a74ba6471a3e71621ecb57c4eb1b0cfcd}\label{class_data___i_o_1_1_data___i_o_a74ba6471a3e71621ecb57c4eb1b0cfcd}} 
+{\bfseries y\+Min}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_acc3139dfa8a349ddea139df2fa843434}\label{class_data___i_o_1_1_data___i_o_acc3139dfa8a349ddea139df2fa843434}} 
+{\bfseries x\+Max}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a038056d25e751ffb5b3a061a0a27ac99}\label{class_data___i_o_1_1_data___i_o_a038056d25e751ffb5b3a061a0a27ac99}} 
+{\bfseries y\+Max}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_ac0f879659935d910e7650d8e8c3de9a1}\label{class_data___i_o_1_1_data___i_o_ac0f879659935d910e7650d8e8c3de9a1}} 
+{\bfseries bbox}
+\item 
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a7bad551ee75c172ad731f6da4c5e80ae}\label{class_data___i_o_1_1_data___i_o_a7bad551ee75c172ad731f6da4c5e80ae}} 
+{\bfseries coord\+\_\+system}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\begin{DoxyVerb}Access to all sql queries. Initialised by config.ini.
+
+fname_config: str, the config filename
+\end{DoxyVerb}
+ 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_a6af825f0682e54cbb22f57a189a6fcc8}\label{class_data___i_o_1_1_data___i_o_a6af825f0682e54cbb22f57a189a6fcc8}} 
+\index{Data\+\_\+\+I\+O\+::\+Data\+\_\+\+IO@{Data\+\_\+\+I\+O\+::\+Data\+\_\+\+IO}!read\+\_\+from\+\_\+sql\+Server@{read\+\_\+from\+\_\+sql\+Server}}
+\index{read\+\_\+from\+\_\+sql\+Server@{read\+\_\+from\+\_\+sql\+Server}!Data\+\_\+\+I\+O\+::\+Data\+\_\+\+IO@{Data\+\_\+\+I\+O\+::\+Data\+\_\+\+IO}}
+\subsubsection{\texorpdfstring{read\+\_\+from\+\_\+sql\+Server()}{read\_from\_sqlServer()}}
+{\footnotesize\ttfamily def read\+\_\+from\+\_\+sql\+Server (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{name }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Reads SQL-Database into pandas dataframe.
+
+Args:
+    sql_query: str, name of sql-query in section SQL_QUERIES
+        in config-file
+
+Returns:
+    pandas.DataFrame(sql-db)
+\end{DoxyVerb}
+ \mbox{\Hypertarget{class_data___i_o_1_1_data___i_o_adf0ca5cf816de8cfc624b287103b4f03}\label{class_data___i_o_1_1_data___i_o_adf0ca5cf816de8cfc624b287103b4f03}} 
+\index{Data\+\_\+\+I\+O\+::\+Data\+\_\+\+IO@{Data\+\_\+\+I\+O\+::\+Data\+\_\+\+IO}!write\+\_\+to\+\_\+sql\+Server@{write\+\_\+to\+\_\+sql\+Server}}
+\index{write\+\_\+to\+\_\+sql\+Server@{write\+\_\+to\+\_\+sql\+Server}!Data\+\_\+\+I\+O\+::\+Data\+\_\+\+IO@{Data\+\_\+\+I\+O\+::\+Data\+\_\+\+IO}}
+\subsubsection{\texorpdfstring{write\+\_\+to\+\_\+sql\+Server()}{write\_to\_sqlServer()}}
+{\footnotesize\ttfamily def write\+\_\+to\+\_\+sql\+Server (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{table\+\_\+name,  }\item[{}]{df,  }\item[{}]{dtype = {\ttfamily \{\}} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Writes to SQL-Database.
+
+Args:
+    table_name: str, name of table to write to
+    df: pandas.DataFrame(), which values are written to table
+
+Kwargs:
+    dtype: dict, {col: type} type is of int, float, or geometry etc.
+
+Returns:\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/jpelda/\+Documents/\+Git\+Hub/memphis/class/Data\+\_\+\+I\+O.\+py\end{DoxyCompactItemize}

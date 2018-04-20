@@ -16,6 +16,7 @@ from matplotlib import rc
 import networkx as nx
 import osmnx
 from shapely.wkb import loads
+import pandas as pd
 
 sys.path.append(os.getcwd() + os.sep + 'class')
 print(os.getcwd() + os.sep + 'class')
@@ -23,6 +24,7 @@ sys.path.append(os.getcwd() + os.sep + 'func')
 from Data_IO import Data_IO
 from Conditioning import Conditioning
 from Allocation import Allocation
+from wcPERinhab import wcPERinhab
 #  TODO reproject data with geopandas better than transform coordinates?
 
 #########################################################################
@@ -33,11 +35,24 @@ config = os.getcwd() + os.sep +\
         'config' + os.sep + 'test_config.ini'
 Data = Data_IO(config)
 
+#  TODO shift all the configparser into DATA_IO
+import configparser as cfp
+con = cfp.ConfigParser()
+con.read(config)
+country = con['SQL_QUERIES']['country']
+
 gis = Data.read_from_sqlServer('gis')
 census = Data.read_from_sqlServer('census')
+wc = Data.read_from_sqlServer('wc_per_inhab')
 
 census_gdf = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='SHAPE')
 gis_gdf = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
+wc_df = pd.DataFrame(wc)
+
+wcPERi = wcPERinhab(wc_df, 'Germany')
+
+
+
 graph = osmnx.graph_from_polygon(Data.bbox)
 
 
@@ -122,17 +137,16 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 
 
-#  Data.write_to_sqlServer('gis_visual', gis_gdf)
 
-graph_gdf_nodes, graph_gdf_edges = osmnx.save_load.graph_to_gdfs(
-        graph,
-        nodes=True, edges=True,
-        node_geometry=True,
-        fill_edge_geometry=False)
+#graph_gdf_nodes, graph_gdf_edges = osmnx.save_load.graph_to_gdfs(
+#        graph,
+#        nodes=True, edges=True,
+#        node_geometry=True,
+#        fill_edge_geometry=False)
 
 gis_gdf.plot(ax=ax, color='black', linewidth=0.3, alpha=1)
-graph_gdf_nodes.plot(ax=ax, color='red', markersize=0.2)
-graph_gdf_edges.plot(ax=ax, color='green', linewidth=0.3, alpha=1)
+#graph_gdf_nodes.plot(ax=ax, color='red', markersize=0.2)
+#graph_gdf_edges.plot(ax=ax, color='green', linewidth=0.3, alpha=1)
 
 vmin = 0
 vmax = 50
@@ -148,12 +162,29 @@ colorBar.ax.set_title('inhabitans',
                       horizontalalignment='left', fontsize=10)
 #  test.plot(ax=ax, color="red", alpha=1)
 plt.show()
+<<<<<<< HEAD
 fig.savefig('Göttingen' + '.pdf',
             filetype='pdf', bbox_inches='tight', dpi=600)
 
 
 #Data.write_to_sqlServer('raster_visual', raster)
 #  Data.write_to_sqlServer('gis_visual', gis_gdf, dtype=)
+=======
+#fig.savefig('Göttingen' + '.pdf',
+#            filetype='pdf', bbox_inches='tight', dpi=600)
+
+
+Data.write_to_sqlServer('raster_visual', raster, dtype={
+        'SHAPE':'GEOMETRY', 'inhabitans':'int'})
+print(gis_gdf.keys())
+a = None
+#gis_gdf['name'] == None] = 
+#  TODO NULL into sql as object and not string like here:
+gis_gdf.fillna(value='NULL', inplace=True)
+Data.write_to_sqlServer('gis_visual', gis_gdf, dtype={'osm_id':'int',
+                                                      'name':'varchar(100)',
+                                                      'SHAPE':'GEOMETRY'})
+>>>>>>> 2eff254be9c39934a66908e5e78fbd8e757d0258
 #Data.write_to_sqlServer('graph_nodes', graph_gdf_nodes,
 #                        dtype={'highway': 'varchar(20)',
 #                               'osmid': 'int',

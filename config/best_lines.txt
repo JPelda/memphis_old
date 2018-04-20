@@ -5,3 +5,5 @@ sql = "INSERT INTO `{}` ({}) VALUES {}".format(table_name,
 
 Does a buffer in square around point g
 a = g.buffer(1.0, cap_style=3, join_style=1)
+
+LOAD DATA INFILE 'D:\jpelda\\MEMPHIS\\HAWK\\data\\wc_per_inhab.csv' INTO TABLE `wc_per_inhab` FIELDS TERMINATED BY ';' ENCLOSED BY '\"'
