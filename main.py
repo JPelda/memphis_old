@@ -15,10 +15,10 @@ from shapely.geometry import Polygon, Point
 from matplotlib import rc
 import networkx as nx
 import osmnx
-from geoalchemy2 import Geometry
 from shapely.wkb import loads
 
 sys.path.append(os.getcwd() + os.sep + 'class')
+print(os.getcwd() + os.sep + 'class')
 sys.path.append(os.getcwd() + os.sep + 'func')
 from Data_IO import Data_IO
 from Conditioning import Conditioning
@@ -152,14 +152,14 @@ fig.savefig('Göttingen' + '.pdf',
             filetype='pdf', bbox_inches='tight', dpi=600)
 
 
-Data.write_to_sqlServer('raster_visual', raster)
+#Data.write_to_sqlServer('raster_visual', raster)
 #  Data.write_to_sqlServer('gis_visual', gis_gdf, dtype=)
-Data.write_to_sqlServer('graph_nodes', graph_gdf_nodes,
-                        dtype={'highway': 'varchar(20)',
-                               'osmid': 'int',
-                               'x': 'float',
-                               'y': 'float',
-                               'geometry': 'GEOMETRY'})
+#Data.write_to_sqlServer('graph_nodes', graph_gdf_nodes,
+#                        dtype={'highway': 'varchar(20)',
+#                               'osmid': 'int',
+#                               'x': 'float',
+#                               'y': 'float',
+#                               'geometry': 'GEOMETRY'})
 #Data.write_to_sqlServer('graph_edges', graph_gdf_edges,
 #                        dtype={'access': 'varchar(10)',
 #                               'area':
