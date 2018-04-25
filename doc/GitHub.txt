@@ -18,3 +18,7 @@ git commit -m"docstring"
 
 ##Push changes into actual branch 
 git push
+
+##Merge branches
+'''Merges the [branch_name] into temporarly selected branch
+git merge [branch_name]

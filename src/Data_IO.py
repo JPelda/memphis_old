@@ -66,12 +66,13 @@ class Data_IO:
 
         if 'GEOMETRY' in dtype.values():
             name = list(dtype.keys())[list(dtype.values()).index('GEOMETRY')]
-            print(name)
+
             col = [x + ' ' + dtype[x] for x in dtype]
+            print(', '.join(col))
             sql_new_table = ("CREATE OR REPLACE TABLE `{}` "
                              "({})COLLATE='utf8_bin'").format(table_name,
                                                               ', '.join(col))
-
+            print(sql_new_table)
             df[name] = ["ST_GEOMFROMTEXT('{}', {})".format(x, 4326) for
                            x in df[name]]
 

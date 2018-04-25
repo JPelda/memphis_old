@@ -17,6 +17,7 @@ import networkx as nx
 import osmnx
 from shapely.wkb import loads
 import pandas as pd
+import numpy as np
 
 sys.path.append(os.getcwd() + os.sep + 'src')
 print(os.getcwd() + os.sep + 'class')
@@ -41,12 +42,12 @@ con = cfp.ConfigParser()
 con.read(config)
 country = con['SQL_QUERIES']['country']
 
-gis = Data.read_from_sqlServer('gis')
-census = Data.read_from_sqlServer('census')
+#gis = Data.read_from_sqlServer('gis')
+#census = Data.read_from_sqlServer('census')
 wc = Data.read_from_sqlServer('wc_per_inhab')
 
-census_gdf = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='SHAPE')
-gis_gdf = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
+#census_gdf = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='SHAPE')
+#gis_gdf = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
 wc_df = pd.DataFrame(wc)
 
 wcPERi = wcPERinhab(wc_df, 'Germany')
@@ -61,31 +62,31 @@ graph = osmnx.graph_from_polygon(Data.bbox)
 # C O N D I T I O N I N G
 #########################################################################
 
-census_length_x = census['len_x'][0]
-census_length_y = census['len_y'][0]
-census_x_length = Data.xMax - Data.xMin
-census_y_length = Data.yMax - Data.yMin
-
-factor = 1.9
-delta = census_x_length/census_length_x
-border = delta / factor
-delta_x = census_x_length/census_length_x - border
-delta = census_y_length/census_length_y
-border = delta / factor
-delta_y = census_y_length/census_length_y - border
-
-
-
-poly = [Polygon(((point.x - delta_x, point.y - delta_y),
-                (point.x + delta_x, point.y - delta_y),
-                (point.x + delta_x, point.y + delta_y),
-                (point.x - delta_x, point.y + delta_y),
-                (point.x - delta_x, point.y - delta_y))) for
-                        point in census['SHAPE']]
-inhabitans = [x for x in census['inhabitans']]
-
-raster = {'SHAPE': poly, 'inhabitans': inhabitans}
-raster = gpd.GeoDataFrame(raster, crs=Data.coord_system, geometry='SHAPE')
+#census_length_x = census['len_x'][0]
+#census_length_y = census['len_y'][0]
+#census_x_length = Data.xMax - Data.xMin
+#census_y_length = Data.yMax - Data.yMin
+#
+#factor = 1.9
+#delta = census_x_length/census_length_x
+#border = delta / factor
+#delta_x = census_x_length/census_length_x - border
+#delta = census_y_length/census_length_y
+#border = delta / factor
+#delta_y = census_y_length/census_length_y - border
+#
+#
+#
+#poly = [Polygon(((point.x - delta_x, point.y - delta_y),
+#                (point.x + delta_x, point.y - delta_y),
+#                (point.x + delta_x, point.y + delta_y),
+#                (point.x - delta_x, point.y + delta_y),
+#                (point.x - delta_x, point.y - delta_y))) for
+#                        point in census['SHAPE']]
+#inhabitans = [x for x in census['inhabitans']]
+#
+#raster = {'SHAPE': poly, 'inhabitans': inhabitans}
+#raster = gpd.GeoDataFrame(raster, crs=Data.coord_system, geometry='SHAPE')
 
 
 #point = [Point(Data.xMin, Data.yMin)]
@@ -139,21 +140,27 @@ ax = fig.add_subplot(111)
 
 
 
-#graph_gdf_nodes, graph_gdf_edges = osmnx.save_load.graph_to_gdfs(
-#        graph,
-#        nodes=True, edges=True,
-#        node_geometry=True,
-#        fill_edge_geometry=False)
+graph_gdf_nodes, graph_gdf_edges = osmnx.save_load.graph_to_gdfs(
+        graph,
+        nodes=True, edges=True,
+        node_geometry=True,
+        fill_edge_geometry=False)
 
-gis_gdf.plot(ax=ax, color='black', linewidth=0.3, alpha=1)
+#graph_gdf_nodes = graph_gdf_nodes.astype(object).where(
+#        pd.notnull(graph_gdf_nodes), 'N/A')
+#graph_gdf_edges = graph_gdf_edges.astype(object).where(
+#        pd.notnull(graph_gdf_edges), 'N/A')
+
+print(graph_gdf_nodes)
+#gis_gdf.plot(ax=ax, color='black', linewidth=0.3, alpha=1)
 #graph_gdf_nodes.plot(ax=ax, color='red', markersize=0.2)
 #graph_gdf_edges.plot(ax=ax, color='green', linewidth=0.3, alpha=1)
 
 vmin = 0
 vmax = 50
 cmap = plt.cm.coolwarm
-raster.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax,
-            column='inhabitans', alpha=0.3)
+#raster.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax,
+#            column='inhabitans', alpha=0.3)
 sm = plt.cm.ScalarMappable(cmap=cmap,
                            norm=plt.Normalize(vmin=vmin, vmax=vmax))
 sm._A = []
@@ -175,41 +182,17 @@ fig.savefig('Göttingen' + '.pdf',
 #            filetype='pdf', bbox_inches='tight', dpi=600)
 
 
-Data.write_to_sqlServer('raster_visual', raster, dtype={
-        'SHAPE':'GEOMETRY', 'inhabitans':'int'})
-print(gis_gdf.keys())
-a = None
+#Data.write_to_sqlServer('raster_visual', raster, dtype={
+#        'SHAPE':'GEOMETRY', 'inhabitans':'int'})
+
+
 #gis_gdf['name'] == None] = 
 #  TODO NULL into sql as object and not string like here:
-gis_gdf.fillna(value='NULL', inplace=True)
-Data.write_to_sqlServer('gis_visual', gis_gdf, dtype={'osm_id':'int',
-                                                      'name':'varchar(100)',
-                                                      'SHAPE':'GEOMETRY'})
+#gis_gdf.fillna(value='NULL', inplace=True)
+#Data.write_to_sqlServer('gis_visual', gis_gdf, dtype={'osm_id':'int',
+#                                                      'name':'varchar(100)',
+#                                                      'SHAPE':'GEOMETRY'})
 
-#Data.write_to_sqlServer('graph_nodes', graph_gdf_nodes,
-#                        dtype={'highway': 'varchar(20)',
-#                               'osmid': 'int',
-#                               'x': 'float',
-#                               'y': 'float',
-#                               'geometry': 'GEOMETRY'})
-#Data.write_to_sqlServer('graph_edges', graph_gdf_edges,
-#                        dtype={'access': 'varchar(10)',
-#                               'area':
-#                               'bridge': 'varchar(10)',
-#                               'est_width': 'varchar(10)',
-#                               'geometry': 'GEOMETRY',
-#                               'highway': 'varchar(10)',
-#                               'key': 'int',
-#                               'lanes': 'varchar(10)',
-#                               'length': 'float(6)',
-#                               'maxspeed': 'int(3)',
-#                               'name': 'varchar(20)',
-#                               'oneway': 'bool',
-#                               'osmid': 'int',
-#                               'ref': 'varchar(15)',
-#                               'service': 'varchar(20)',
-#                               'tunnel': 'varchar(20)',
-#                               'u': 'int',
-#                               'v': 'int',
-#                               'width': 'float'})
-                        
+folder = os.getcwd() + os.sep + 'input'
+osmnx.save_load.save_graph_shapefile(graph,'graph_goettingen', folder + os.sep)
+
