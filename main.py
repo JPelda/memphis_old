@@ -112,7 +112,7 @@ raster = gpd.GeoDataFrame(raster, crs=Data.coord_system, geometry='SHAPE')
 # V I S U A L I S A T I O N
 #########################################################################
 rc('text', usetex=True)
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+rc('font', **{'family': 'Arial'})
 #        rc('font', serif='malgunbd')
 rc('ps', usedistiller='xpdf')
 rc('pdf', fonttype=42)
