@@ -14,7 +14,6 @@ from shapely.geometry import Point, LineString, Polygon
 from shapely.wkt import loads
 import shapely.wkb
 from sqlalchemy import create_engine
-from geoalchemy2 import Geometry, WKTElement
 from osgeo import ogr
 import time
 from sqlalchemy import types
