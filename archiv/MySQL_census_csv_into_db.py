@@ -37,10 +37,11 @@ engine = create_engine('mysql+pymysql://root:wasteheat@localhost:3306/memphis', 
 print("pls wait about 20 min - then reload localhost")
 query = "LOAD DATA INFILE 'E:/datamemphis/data/Zensus_Bevoelkerung_100m-Gitter.csv' INTO TABLE census_ger FIELDS TERMINATED BY ';' ENCLOSED BY '\"' ESCAPED BY '\\\\'"
 
-
 cursor.execute(query)
 
 # Make sure data is committed to the database
 cnx.commit()
 cursor.close()
 cnx.close()
+print("finished")
+
