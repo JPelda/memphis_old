@@ -19,6 +19,7 @@ from shapely.wkb import loads
 import pandas as pd
 
 sys.path.append(os.getcwd() + os.sep + 'class')
+print(os.getcwd() + os.sep + 'class')
 sys.path.append(os.getcwd() + os.sep + 'func')
 from Data_IO import Data_IO
 from Conditioning import Conditioning
@@ -162,6 +163,14 @@ colorBar.ax.set_title('inhabitans',
                       horizontalalignment='left', fontsize=10)
 #  test.plot(ax=ax, color="red", alpha=1)
 plt.show()
+<<<<<<< HEAD
+fig.savefig('Göttingen' + '.pdf',
+            filetype='pdf', bbox_inches='tight', dpi=600)
+
+
+#Data.write_to_sqlServer('raster_visual', raster)
+#  Data.write_to_sqlServer('gis_visual', gis_gdf, dtype=)
+=======
 #fig.savefig('Göttingen' + '.pdf',
 #            filetype='pdf', bbox_inches='tight', dpi=600)
 
@@ -176,6 +185,7 @@ gis_gdf.fillna(value='NULL', inplace=True)
 Data.write_to_sqlServer('gis_visual', gis_gdf, dtype={'osm_id':'int',
                                                       'name':'varchar(100)',
                                                       'SHAPE':'GEOMETRY'})
+>>>>>>> 2eff254be9c39934a66908e5e78fbd8e757d0258
 #Data.write_to_sqlServer('graph_nodes', graph_gdf_nodes,
 #                        dtype={'highway': 'varchar(20)',
 #                               'osmid': 'int',

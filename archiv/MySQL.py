@@ -29,7 +29,7 @@ import pandas as pd
 #print(ENGINE)
 
 cnx = pymysql.connect(host='localhost', user='root',
-                             password='wasteheat', db='memphis')
+                             password='wasteheat', db='test')
 cursor = cnx.cursor()
 #query = ("SELECT ich, du FROM census_ger")
 #val = 4
