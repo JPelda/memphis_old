@@ -64,51 +64,37 @@ class Data_IO:
         '''
         print('Save data to {} in db {}'.format(table_name, self.engine))
 
-        if 'GEOMETRY' in dtype.values():
-            name = list(dtype.keys())[list(dtype.values()).index('GEOMETRY')]
-            col = [x + ' ' + dtype[x] for x in dtype]
-            sql_new_table = ("CREATE OR REPLACE TABLE `{}` "
-                             "({})COLLATE='utf8_bin'").format(table_name,
-                                                              ', '.join(col))
+       if 'GEOMETRY' in dtype.values():
+           name = list(dtype.keys())[list(dtype.values()).index('GEOMETRY')]
+           print(name)
+           col = [x + ' ' + dtype[x] for x in dtype]
+           sql_new_table = ("CREATE OR REPLACE TABLE `{}` "
+                            "({})COLLATE='utf8_bin'").format(table_name,
+                                                             ', '.join(col))
 
-            df[name] = ["ST_GeomFromText('{}', {})".format(x, 4326) for
-                        x in df[name]]
+             df[name] = ["ST_GEOMFROMTEXT('{}', {})".format(x, 4326) for
+                            x in df[name]]
 
-            data = list(df.itertuples(index=False, name=None))
-            data = str(data).strip('[]')
-            data = data.replace('"', '')
+             data = list(df.itertuples(index=False, name=None))
+             data = str(data).strip('[]')
+             data = data.replace('"', '')
+     
+             sql = "INSERT INTO `{}` ({}) VALUES {}".format(
+                     table_name, ', '.join(dtype.keys()), data)
+             sql_types = "ALTER TABLE `raster_visual` "\
+                         "MODIFY COLUMN `{}` GEOMETRY "\
+                         .format(name, name)
 
-            sql = "INSERT INTO `{}` ({}) VALUES {}".format(
-                    table_name, ', '.join(dtype.keys()), data)
-<<<<<<< HEAD:src/Data_IO.py
-            sql_types = "ALTER TABLE `raster_visual` "\
-                        "MODIFY COLUMN `{}` GEOMETRY "\
-                        .format(name, name)
-=======
->>>>>>> refs/heads/AIT:class/Data_IO.py
-
-            conn = self.engine.connect()
-            conn.execute(sql_new_table)
-            conn.execute(sql)
-<<<<<<< HEAD:src/Data_IO.py
-=======
-            #  TODO is it possible to update table after loading data in?
-            #  The advantage is, that dtype has not to be defined previously,
-            #  pandas.to_sql will do it.
-#            df.to_sql(table_name, self.engine, if_exists='replace',
-#                      index=False)
->>>>>>> refs/heads/AIT:class/Data_IO.py
-            conn.close()
-
-        else:
-            df.to_sql(table_name, self.engine, if_exists='replace',
-                      index=False)
-<<<<<<< HEAD:src/Data_IO.py
-
-        print("Saved.")
-=======
-        print("{}----------------------> Saved.".format(table_name))
->>>>>>> refs/heads/AIT:class/Data_IO.py
+             conn = self.engine.connect()
+                conn.execute(sql_new_table)
+                conn.execute(sql)
+             conn.close()
+ 
+     else:
+         df.to_sql(table_name, self.engine, if_exists='replace',
+                   index=False)
++
+     print("Saved.")
 
     def read_from_sqlServer(self, name):
         '''Reads SQL-Database into pandas dataframe.
