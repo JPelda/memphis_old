@@ -10,6 +10,7 @@ import sys
 
 import configparser as cfp
 import pandas as pd
+import geopandas as gpd
 from shapely.geometry import Point, LineString, Polygon
 from shapely.wkt import loads
 import shapely.wkb
@@ -18,10 +19,11 @@ from osgeo import ogr
 import time
 from sqlalchemy import types
 import itertools
+import osmnx
 
 
 sys.path.append(os.path.dirname(os.getcwd()) + os.sep + 'func')
-from transform_coordinates import transform_coords
+from transformations_of_crs_values import transform_coords
 
 
 class Data_IO:
@@ -165,6 +167,9 @@ class Data_IO:
                     df['SHAPE'] = SHAPEmetry
         if 'SHAPE' in df.keys():
             del df[col['SHAPE'][0]]
+        #  Rename columns to fit names in algorithm.
+        inv_col = {v: k for k, v in col.items() if type(v) != list}
+        df = df.rename(columns=(inv_col))
         return df
 
     def select_from_where_between(self, col, table, bbox):
@@ -196,6 +201,39 @@ class Data_IO:
                                                       x is not None]), table)
         return sql
 
+    def read_from_shp(self, name, path=None):
+        '''Reads File into pandas dataframe.
+        Args:
+            name: str, name of file in section Files in config
+
+        Returns:
+            geopandas.DataFrame(fname)
+        '''
+        if path is not None:
+            path = path
+        else:
+            path = eval(self.config['Files']['path_import'])
+        fname = eval(self.config['Files'][name])
+        df = gpd.read_file(path + os.sep + fname)
+        return df
+
+    def read_from_graphml(self, name, path=None):
+        '''Reads File into pandas dataframe.
+        Args:
+            name: str, name of file in section Files in config
+
+        Returns:
+            nx.Graph
+        '''
+        if path is None:
+            path = eval(self.config['Files']['path_import'])
+        else:
+            path = path
+
+        graph = osmnx.save_load.load_graphml(path + os.sep +
+                                             self.config['Files'][name])
+
+        return graph
 
     def dict_of_nested_lists_to_list(self, dictionary):
         dictionary = [dictionary[x] for x in dictionary.keys()]
@@ -205,11 +243,7 @@ class Data_IO:
                 for x in item:
                     arr.append(x)
             else:
-                if item is '*':
-                    arr = [item]
-                    break
-                else:
-                    arr.append(item)
+                arr.append(item)
         ret = arr
         return ret
 

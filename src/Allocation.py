@@ -9,7 +9,7 @@ Created on Wed Feb 21 15:54:23 2018
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon
-import pymysql
+
 
 
 class Allocation:
