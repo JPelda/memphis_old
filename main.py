@@ -21,6 +21,7 @@ import numpy as np
 import configparser as cfp
 from matplotlib.colors import ListedColormap
 
+
 sys.path.append(os.getcwd() + os.sep + 'src')
 print(os.getcwd() + os.sep + 'class')
 sys.path.append(os.getcwd() + os.sep + 'src' + os.sep + 'utils')
@@ -33,6 +34,8 @@ from transformations_of_crs_values import transform_coords
 from plotter import plot_format, color_map
 from buffer import buffer
 from allocate_inhabitants_to_nodes import allocate_inhabitants_to_nodes
+from accumulate_val_along_path import sum_wc
+from paths_to_dataframe import paths_to_dataframe
 #  TODO reproject data with geopandas better than transform coordinates?
 
 #########################################################################
@@ -40,8 +43,8 @@ from allocate_inhabitants_to_nodes import allocate_inhabitants_to_nodes
 #########################################################################
 Data = Data_IO('config' + os.sep + 'test_config.ini')
 
-#gis = Data.read_from_sqlServer('gis')
-#gdf_gis = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
+# gis = Data.read_from_sqlServer('gis')
+# gdf_gis = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
 wc = Data.read_from_sqlServer('wc_per_inhab')
 # Reads graph from file, shp import makes problems.
 graph = Data.read_from_graphml('graph')
@@ -52,11 +55,10 @@ census = Data.read_from_sqlServer('census')
 # C O N D I T I O N I N G
 #########################################################################
 
-gdf_nodes, gdf_edges = osmnx.save_load.graph_to_gdfs(
-        graph,
-        nodes=True, edges=True,
-        node_geometry=True,
-        fill_edge_geometry=True)
+gdf_nodes, gdf_edges = osmnx.save_load.graph_to_gdfs(graph, nodes=True,
+                                                     edges=True,
+                                                     node_geometry=True,
+                                                     fill_edge_geometry=True)
 
 
 # Builds buffer around points of census.
@@ -66,10 +68,10 @@ gdf_census['SHAPE_b'] = buffer(gdf_census, Data.x_min, Data.x_max,
                                Data.y_min, Data.y_max)
 
 #  TODO Do we really need to filter nodes for performance issues?
-#singlepoints = merge_points([(id, geo) for id, geo in
+# singlepoints = merge_points([(id, geo) for id, geo in
 #                             zip(gdf_nodes.osmid, gdf_nodes.geometry)],
 #                            100)
-#spoints = gpd.GeoDataFrame(singlepoints, columns=['osmid', 'SHAPE'],
+# spoints = gpd.GeoDataFrame(singlepoints, columns=['osmid', 'SHAPE'],
 #                           crs=Data.coord_system, geometry='SHAPE')
 
 
@@ -81,17 +83,30 @@ gdf_census['SHAPE_b'] = buffer(gdf_census, Data.x_min, Data.x_max,
 # water consumption of previous specified country.
 gdf_nodes['inhabs'] = allocate_inhabitants_to_nodes(gdf_census,
                                                     gdf_nodes, graph)
-gdf_nodes['inhabs'] = gdf_nodes['inhabs'] *\
+gdf_nodes['wc'] = gdf_nodes['inhabs'] *\
                          float(wc[wc.country_l ==
                                   Data.country].lPERpTIMESd.item())
 
 # Sets node of graph that is nearest to waste water treatment plant and
-#calculates paths from nodes where nodes['inhabs'] > 0.
+# calculates paths from nodes where nodes['inhabs'] > 0.
 end_node = osmnx.get_nearest_node(graph, (Data.wwtp.y, Data.wwtp.x))
-gdf_nodes['s_path'] = [nx.shortest_path(graph, index, end_node) if
-                       row['inhabs'] != 0 else [] for index, row in
-                       gdf_nodes.iterrows()]
 
+gdf_nodes['path_to_end_node'] = [nx.shortest_path(graph, index, end_node) if
+                                 row['wc'] != 0 else [] for index, row in
+                                 gdf_nodes.iterrows()]
+
+gdf_paths = paths_to_dataframe(gdf_nodes[:10], gdf_edges)
+
+
+# Accumulates wc along each path.
+gdf_nodes['sum_wc'] = sum_wc(gdf_nodes)
+
+# Allocates water flows to edges. Edge gets the value of the node with lowest
+# wc
+gdf_edges['sum_wc'] = [gdf_nodes['sum_wc'][u] if
+                       gdf_nodes['sum_wc'][u] < gdf_nodes['sum_wc'][v] else
+                       gdf_nodes['sum_wc'][v] for u, v in
+                       zip(gdf_edges['u'], gdf_edges['v'])]
 
 
 #########################################################################
@@ -106,7 +121,7 @@ cmap_nodes = plt.get_cmap('WhiteRed')
 cmap_paths = plt.get_cmap('WhiteRed')
 vmin_census = 0
 vmax_census = 100
-vmin_nodes = min(gdf_nodes['inhabs'])
+vmin_nodes = min(gdf_nodes['wc'])
 vmax_nodes = 100
 vmin_paths = 0
 vmax_paths = 300
@@ -133,10 +148,11 @@ census.plot(ax=ax, cmap=cmap_census, vmin=vmin_census,
             column='inhabs',
             alpha=0.25)
 
-gdf_edges.plot(ax=ax, color='green', linewidth=0.3, alpha=1)
+gdf_edges.plot(ax=ax, cmap=cmap_nodes, vmin=vmin_nodes, vmax=vmax_nodes,
+               column='sum_wc', linewidth=0.3, alpha=0.3)
 gdf_nodes.plot(ax=ax, cmap=cmap_nodes, vmin=vmin_nodes, vmax=vmax_nodes,
-               column='inhabs', markersize=10)
-
+               column='sum_wc', markersize=10)
+gdf_paths.plot(ax=ax, color='green')
 # for x, y, txt in zip(gdf_nodes['x'], gdf_nodes['y'], gdf_nodes['inhabs']):
 # ax.annotate(txt, (x, y))
 
