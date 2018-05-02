@@ -11,16 +11,11 @@ import sys
 import configparser as cfp
 import pandas as pd
 import geopandas as gpd
-from shapely.geometry import Point, LineString, Polygon
+from shapely.geometry import Point, Polygon
 from shapely.wkt import loads
-import shapely.wkb
 from sqlalchemy import create_engine
 from osgeo import ogr
-import time
-from sqlalchemy import types
-import itertools
 import osmnx
-
 
 sys.path.append(os.path.dirname(os.getcwd()) + os.sep + 'func')
 from transformations_of_crs_values import transform_coords
@@ -39,15 +34,15 @@ class Data_IO:
                                     encoding='utf-8')
 
         GIS = self.config['SQL_QUERIES']
-        self.xMin = float(GIS['xMin'])
-        self.yMin = float(GIS['yMin'])
-        self.xMax = float(GIS['xMax'])
-        self.yMax = float(GIS['yMax'])
-        coords = ((self.xMin, self.yMin),
-                  (self.xMin, self.yMax),
-                  (self.xMax, self.yMax),
-                  (self.xMax, self.yMin),
-                  (self.xMin, self.yMin))
+        self.x_min = float(GIS['x_min'])
+        self.y_min = float(GIS['y_min'])
+        self.x_max = float(GIS['x_max'])
+        self.y_max = float(GIS['y_max'])
+        coords = ((self.x_min, self.y_min),
+                  (self.x_min, self.y_max),
+                  (self.x_max, self.y_max),
+                  (self.x_max, self.y_min),
+                  (self.x_min, self.y_min))
         self.bbox = Polygon(coords)
         self.coord_system = GIS['coord_system']
         self.country = self.config['SQL_QUERIES']['country']
@@ -81,7 +76,7 @@ class Data_IO:
                                                               ', '.join(col))
             print(sql_new_table)
             df[name] = ["ST_GEOMFROMTEXT('{}', {})".format(x, 4326) for
-                           x in df[name]]
+                        x in df[name]]
 
             data = list(df.itertuples(index=False, name=None))
             data = str(data).strip('[]')
@@ -89,9 +84,6 @@ class Data_IO:
 
             sql = "INSERT INTO `{}` ({}) VALUES {}".format(
                     table_name, ', '.join(dtype.keys()), data)
-            sql_types = "ALTER TABLE `raster_visual` "\
-                        "MODIFY COLUMN `{}` GEOMETRY "\
-                        .format(name, name)
 
             conn = self.engine.connect()
             conn.execute(sql_new_table)
@@ -252,14 +244,11 @@ class Data_IO:
         ret = arr
         return ret
 
+
 if __name__ == "__main__":
 
-    import os
-
-    config = os.path.dirname(os.getcwd()) + os.sep +\
-            'config' + os.sep + 'test_config.ini'
-
-    Data = Data_IO(config)
+    Data = Data_IO(os.path.dirname(os.getcwd()) + os.sep + 'config' + os.sep +
+                   'test_config.ini')
 
     gis = Data.read_from_sqlServer('gis')
     census = Data.read_from_sqlServer('census')
