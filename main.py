@@ -18,6 +18,8 @@ import osmnx
 from shapely.wkb import loads
 import pandas as pd
 import numpy as np
+import configparser as cfp
+from matplotlib.colors import ListedColormap
 
 sys.path.append(os.getcwd() + os.sep + 'src')
 print(os.getcwd() + os.sep + 'class')
@@ -27,6 +29,8 @@ from Conditioning import Conditioning
 from Allocation import Allocation
 from wcPERinhab import wcPERinhab
 from merge_points import merge_points
+from transformations_of_crs_values import transform_coords
+from plotter import plot_format, color_map
 #  TODO reproject data with geopandas better than transform coordinates?
 
 #########################################################################
@@ -37,64 +41,90 @@ config = os.getcwd() + os.sep +\
         'config' + os.sep + 'test_config.ini'
 Data = Data_IO(config)
 
-#  TODO shift all the configparser into DATA_IO
-import configparser as cfp
-con = cfp.ConfigParser()
-con.read(config)
-country = con['SQL_QUERIES']['country']
-wwtp = Point(float(con['coords']['waste_water_treatment_plant_x']),
-             float(con['coords']['waste_water_treatment_plant_y']))
+### Reads location of waste water treatment plant. ###
+gdf_wwtp = gpd.GeoDataFrame([Data.wwtp], columns=['SHAPE'],
+                             crs=Data.coord_system, geometry='SHAPE')
 
-gdf_wwtp = gpd.GeoDataFrame([wwtp], columns=['SHAPE'],crs=Data.coord_system, geometry='SHAPE')
-
+### Reads gis data. ###
 #gis = Data.read_from_sqlServer('gis')
-census = Data.read_from_sqlServer('census')
+#gdf_gis = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
 
-#
-#
-#
-#wc = Data.read_from_sqlServer('wc_per_inhab')
-#
-#census_gdf = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='SHAPE')
-#gis_gdf = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
-#wc_df = pd.DataFrame(wc)
-#wcPERi = wcPERinhab(wc_df, 'Germany')
+### Reads water consumption and thus waste water production. ###
+wc = Data.read_from_sqlServer('wc_per_inhab')
 
-#gdf_edges = Data.read_from_shp('edges')
-#gdf_nodes = Data.read_from_shp('nodes')
-#print(gdf_edges)
-#print(gdf_nodes)
-#graph = osmnx.gdfs_to_graph(gdf_nodes, gdf_edges)
-#folder = os.getcwd() + os.sep + 'input'
-#graph = osmnx.graph_from_polygon(Data.bbox)
+### Reads graph from file, shp import makes problems. ###
 graph = Data.read_from_graphml('graph')
-
 nx.set_node_attributes(graph, 0, name='inhabs')
-
-##nodes = Data.read_from_sqlServer('graph_nodes')
-##edges = Data.read_from_sqlServer('graph_edges')
-#
-##graph = osmnx.save_load.load_graphml()
-#
-##gdf_nodes = gpd.GeoDataFrame(nodes, crs=Data.coord_system, geometry="SHAPE")
-##gdf_edges = gpd.GeoDataFrame(edges, crs=Data.coord_system, geometry="SHAPE")
-#
-#
+end_node = osmnx.get_nearest_node(graph, (Data.wwtp.y, Data.wwtp.x))
+shortest_paths = nx.shortest_path(graph, target=end_node)
+# TODO calc only paths for nodes as start node where node[inhab] > 0
 gdf_nodes, gdf_edges = osmnx.save_load.graph_to_gdfs(
         graph,
         nodes=True, edges=True,
         node_geometry=True,
         fill_edge_geometry=True)
 
-end_node = osmnx.get_nearest_node(graph, (wwtp.y, wwtp.x), method='haversine')
-#end_node = end_node[0]
+### Reads census data and builds buffer. ###
+census = Data.read_from_sqlServer('census')
+gdf_census = gpd.GeoDataFrame(census, crs=Data.coord_system,
+                              geometry='SHAPE')
+#geo = transform_coords(gdf_census['SHAPE'],
+#                       from_coord='epsg:4326',
+#                       into_coord="epsg:3035")
+#geo = [x.buffer(40, cap_style=3) for x in geo]
+#geo = transform_coords(geo)
+census_length_x = census['len_x'][0]
+census_length_y = census['len_y'][0]
+census_x_length = Data.xMax - Data.xMin
+census_y_length = Data.yMax - Data.yMin
 
-gdf_end_node = gpd.GeoDataFrame([gdf_nodes['geometry'][end_node]],
-                                columns=['SHAPE'],
-                                crs=Data.coord_system,
-                                geometry='SHAPE')
-shortest_paths = nx.shortest_path(graph, target=end_node)
+factor = 1.9
+delta = census_x_length/census_length_x
+border = delta / factor
+delta_x = census_x_length/census_length_x - border
+delta = census_y_length/census_length_y
+border = delta / factor
+delta_y = census_y_length/census_length_y - border
 
+geo = [Polygon(((point.x - delta_x, point.y - delta_y),
+                (point.x + delta_x, point.y - delta_y),
+                (point.x + delta_x, point.y + delta_y),
+                (point.x - delta_x, point.y + delta_y),
+                (point.x - delta_x, point.y - delta_y))) for
+        point in census['SHAPE']]
+gdf_census['SHAPE_b'] = geo
+gdf_census['nodes_within'] = 0
+
+p_within = [0]*len(gdf_census['nodes_within'])
+gdf_nodes_osmid_geometry = {int(osmid): geo for osmid, geo in zip(
+        gdf_nodes['osmid'], gdf_nodes['geometry'])}
+
+for i, (point, poly, inhab) in enumerate(zip(gdf_census['SHAPE'],
+                                             gdf_census['SHAPE_b'],
+                                             gdf_census['inhabs'])):
+    if inhab <= 0:
+        continue
+    else:
+        p_within[i] = {osmid: inhab for osmid, p in
+                       zip(gdf_nodes_osmid_geometry.keys(),
+                           gdf_nodes_osmid_geometry.values()) if
+                       p.within(poly)}
+        if p_within[i] != {}:
+            val = list(p_within[i].values())[0] / len(p_within[i])
+            p_within[i] = dict.fromkeys(p_within[i], val)
+            for key, val in p_within[i].items():
+                gdf_nodes['inhabs'][key] += val
+                del gdf_nodes_osmid_geometry[key]
+        else:
+            key = osmnx.get_nearest_node(graph, (point.y, point.x))
+            gdf_nodes['inhabs'][key] += inhab
+
+
+gdf_nodes['inhabs'] = gdf_nodes['inhabs'] *\
+                         float(wc[wc.country_l ==
+                                  Data.country].lPERpTIMESd.item())
+
+G = osmnx.save_load.gdfs_to_graph(gdf_nodes, gdf_edges)
 
 
 #singlepoints = merge_points([(id, geo) for id, geo in
@@ -138,115 +168,115 @@ shortest_paths = nx.shortest_path(graph, target=end_node)
 # C O N D I T I O N I N G
 #########################################################################
 
-census_length_x = census['len_x'][0]
-census_length_y = census['len_y'][0]
-census_x_length = Data.xMax - Data.xMin
-census_y_length = Data.yMax - Data.yMin
 
-factor = 1.9
-delta = census_x_length/census_length_x
-border = delta / factor
-delta_x = census_x_length/census_length_x - border
-delta = census_y_length/census_length_y
-border = delta / factor
-delta_y = census_y_length/census_length_y - border
-
-from transformations_of_crs_values import transform_coords
-poly = [p.buffer(1, cap_style=3) for p in census['SHAPE']]
-print(census['SHAPE'][0])
-print(poly[0].exterior.coords.xy)
-print(type(poly[0]))
-coords = transform_coords([poly])
-print(coords)
-poly = [Polygon(((point.x - delta_x, point.y - delta_y),
-                (point.x + delta_x, point.y - delta_y),
-                (point.x + delta_x, point.y + delta_y),
-                (point.x - delta_x, point.y + delta_y),
-                (point.x - delta_x, point.y - delta_y))) for
-                        point in census['SHAPE']]
-inhabs = [x for x in census['inhabs']]
-
-raster = {'SHAPE': poly, 'inhabs': inhabs}
-raster = gpd.GeoDataFrame(raster, crs=Data.coord_system, geometry='SHAPE')
 s_paths = shortest_paths
+G_s_paths = nx.Graph()
+routes = s_paths.values()
+
+edges = []
+for r in routes:
+    route_edges = [(r[n],r[n+1]) for n in range(len(r)-1)]
+    G.add_nodes_from(r)
+    G.add_edges_from(route_edges)
+    edges.append(route_edges)
+
+gdf_paths_nodes, gdf_paths_edges = osmnx.save_load.graph_to_gdfs(G)
 
 
 
-#  TODO search shortest path and accumulate each inhab of node at this path
 
-
-
-#G = nx.Graph()
-#G.add_nodes_from(gis_coords_doubles)
-#nx.draw(G)
 #########################################################################
 # A L L O C A T I O N
 #########################################################################
 
-nearest_node = {}
-for index, row in census.iterrows():
-    node = osmnx.get_nearest_node(graph, (row['SHAPE'].y, row['SHAPE'].x))
-    nearest_node[node] = row['inhabs']
-for key in nearest_node.keys():
-    graph.node[key]['inhabs'] = nearest_node[key]
+
+#for index, row in census.iterrows():
+#    node = osmnx.get_nearest_node(graph, (row['SHAPE'].y, row['SHAPE'].x))
+#    nearest_node[node] = row['inhabs']
+#for key in nearest_node.keys():
+#    graph.node[key]['inhabs'] = nearest_node[key]
 
 
 #########################################################################
 # V I S U A L I S A T I O N
 #########################################################################
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
+fig, ax = plt.subplots()
 
-gdf_nodes, gdf_edges = osmnx.save_load.graph_to_gdfs(
-        graph,
-        nodes=True, edges=True,
-        node_geometry=True,
-        fill_edge_geometry=True)
+#vmin = 0
+#vmax = 50
+color_map()
+#cmap = plt.cm.binary
 
-vmin = 0
-vmax = 50
-cmap = plt.cm.coolwarm
-#raster.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax,
-#            column='inhabitans', alpha=0.3)
-sm = plt.cm.ScalarMappable(cmap=cmap,
-                           norm=plt.Normalize(vmin=vmin, vmax=vmax))
-sm._A = []
-colorBar = plt.colorbar(sm)
+cmap_census = plt.get_cmap('WhiteRed')
+#cmap_with_alpha = cmap
+#cmap_with_alpha = cmap(np.arange(cmap.N))
+cmap_nodes = plt.get_cmap('WhiteRed')
+cmap_paths = plt.get_cmap('WhiteRed')
+#cmap_with_alpha[:, -1] = np.linspace(0, 1, cmap.N)
+#cmap_with_alpha = ListedColormap(cmap_with_alpha)
+#vmin = min(gdf_nodes['inhabs'])
+vmin_census = 0
+vmax_census = 100
+vmin_nodes = min(gdf_nodes['inhabs'])
+vmax_nodes = 100
+vmin_paths = 0
+vmax_paths = 300
+
+sm_census = plt.cm.ScalarMappable(cmap=cmap_census,
+                           norm=plt.Normalize(vmin=vmin_census,
+                                              vmax=vmax_census))
+sm_nodes = plt.cm.ScalarMappable(cmap=cmap_nodes,
+                                 norm=plt.Normalize(vmin=vmin_nodes,
+                                                    vmax=vmax_nodes))
+sm_paths = plt.cm.ScalarMappable(cmap=cmap_paths,
+                                 norm=plt.Normalize(vmin=vmin_paths,
+                                                    vmax=vmax_paths))
+sm_census._A, sm_nodes._A, sm_paths._A = [], [], []
+
+colorBar_census = fig.colorbar(sm_census, ax=ax)
+colorBar_nodes = fig.colorbar(sm_nodes, ax=ax)
+colorBar_paths = fig.colorbar(sm_paths, ax=ax)
 #        colorBar.set_label("Q [kW]", horizontalalignment='right')
-colorBar.ax.set_title('inhabitans',
-                      horizontalalignment='left', fontsize=10)
-#  test.plot(ax=ax, color="red", alpha=1)
+
 
 #gis_gdf.plot(ax=ax, color='black', linewidth=0.3, alpha=1)
+census = gpd.GeoDataFrame(census, geometry='SHAPE_b', crs=Data.coord_system)
+census.plot(ax=ax, cmap=cmap_census, vmin=vmin_census,
+                        vmax=vmax_census,
+                        column='inhabs',
+                        alpha=0.25)
+
 gdf_edges.plot(ax=ax, color='green', linewidth=0.3, alpha=1)
-gdf_nodes.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, column='inhabs',
-               markersize=0.2)
-gdf_wwtp.plot(ax=ax, color='blue', markersize=0.3)
-gdf_end_node.plot(ax=ax, color='black', markersize=100)
 
-#spoints['SHAPE'] = [x.buffer(0.0008959002216037959) for x in
-#       spoints['SHAPE']]
-#spoints.plot(ax=ax, color='blue')
+gdf_nodes.plot(ax=ax, cmap=cmap_nodes, vmin=vmin_nodes, vmax=vmax_nodes,
+               column='inhabs', markersize=10)
 
-vmin = 0
-vmax = 50
-cmap = plt.cm.coolwarm
-#raster.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax,
-#            column='inhabitans', alpha=0.3)
-sm = plt.cm.ScalarMappable(cmap=cmap,
-                           norm=plt.Normalize(vmin=vmin, vmax=vmax))
-sm._A = []
-colorBar = plt.colorbar(sm)
-#        colorBar.set_label("Q [kW]", horizontalalignment='right')
-colorBar.ax.set_title('inhabitans',
+gdf_paths_edges.plot(ax=ax, color='blue', linewidth=0.4)
+#gdf_paths_nodes.plot(ax=ax, color=cmap_paths, vmin=vmin_paths, vmax=vmax_paths,
+#                     column='inhabs', markersize=15)
+
+#for x, y, txt in zip(gdf_nodes['x'], gdf_nodes['y'], gdf_nodes['inhabs']):
+#    ax.annotate(txt, (x, y))
+
+ax.plot(Data.wwtp.x, Data.wwtp.y, color='black', markersize=20,
+        marker='.')
+
+#nodes = {key: val for key, val in zip(gdf_nodes['osmid'],
+#                                      gdf_nodes['geometry'])}
+#nx.draw_networkx_nodes(G, nodes, ax=ax,
+#                       cmap=cmap, vmin=vmin, vmax=vmax)
+
+colorBar_census.ax.set_title('inhabitants',
                       horizontalalignment='left', fontsize=10)
-#  test.plot(ax=ax, color="red", alpha=1)
-plt.show()
+colorBar_nodes.ax.set_title('inhabitants',
+                            horizontalalignment='left', fontsize=10)
 
+plt.show()
+#plt.pause(5)
 fig.savefig('Göttingen' + '.pdf',
             filetype='pdf', bbox_inches='tight', dpi=600)
-
+#fig.clear()
 
 #Data.write_to_sqlServer('raster_visual', raster)
 #  Data.write_to_sqlServer('gis_visual', gis_gdf, dtype=)

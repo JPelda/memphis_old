@@ -50,6 +50,11 @@ class Data_IO:
                   (self.xMin, self.yMin))
         self.bbox = Polygon(coords)
         self.coord_system = GIS['coord_system']
+        self.country = self.config['SQL_QUERIES']['country']
+        self.wwtp = Point(float(self.config['coords']
+                                ['waste_water_treatment_plant_x']),
+                          float(self.config['coords']
+                                ['waste_water_treatment_plant_y']))
 
     def write_to_sqlServer(self, table_name, df, dtype={}):
         '''Writes to SQL-Database.

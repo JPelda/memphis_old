@@ -26,7 +26,8 @@ def transform_coords(geo, from_coord='epsg:3035', into_coord='epsg:4326'):
     pp.transform needs tuples of floats to convert,
     here input is converted into tuples
     '''
-    if geo_type == Polygon:
+
+    if isinstance(geo[0], Polygon):
         for i, poly in enumerate(geo):
             geo_as_tuples[i] = [(x, y) for x, y in
                                             zip(poly.exterior.coords.xy[0],
