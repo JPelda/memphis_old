@@ -9,15 +9,15 @@ Created on Wed May  2 17:42:14 2018
 def paths_to_dataframe(gdf_nodes, gdf_edges):
     """Brings all paths to dataframe with values of edges
 
-    ARGS:
-
+    Args:
+    -----
     gdf_nodes: geopandas.GeoDataFrame()
         gdf_nodes['path_to_end_node']
     gdf_edges: geopandas.GeoDataFrame()
         gdf_edges['u'], gdf_edges['v']
 
-    RETURNS:
-
+    Returns:
+    --------
     gdf: geopandas.GeoDataFrame()
         gdf contains all information of gdf_edges and only edges according
         to gdf_nodes['path_to_end_node']
@@ -27,16 +27,19 @@ def paths_to_dataframe(gdf_nodes, gdf_edges):
 
     # Forms a list of tuple from odd or uneven list.
     uv = [(x, arr[i+1]) if i < len(arr) - 1 else () for arr in
-          gdf_nodes['path_to_end_node'] for i, x in enumerate(arr)]
+          gdf_nodes.path_to_end_node for i, x in enumerate(arr)]
+    uv = set(uv)
 
-    # Deletes last empty () if existant.
-    if uv[-1] == ():
-        del uv[-1]
+    arr = [0] * len(gdf_edges)
+    for index, u, v in zip(gdf_edges.index, gdf_edges.u, gdf_edges.v):
+        uv_item = (u, v)
+        vu_item = (v, u)
 
-    gdf = gdf_edges[:0]
-    for vec in uv:
-        for index, item in gdf_edges.iterrows():
-            if vec == (item['u'], item['v']) or vec == (item['v'], item['u']):
-                gdf = gdf.append(item)
+        for vec in uv:
+            if vec == uv_item or vec == vu_item:
+                arr[index] = index
+                uv.remove(vec)
+                break
 
+    gdf = gdf_edges.iloc[arr]
     return gdf

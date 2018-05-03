@@ -10,10 +10,14 @@ def merge_points(list_of_tuples_point_ids, dist, crs="EPSG:4326"):
     """Merges points with distance <dist> to each other into one point.
 
     Args:
+    -----
+
     list_of_tuples_point_ids: list(tuples(id, shapely.Point((x, y))))
     dist: float[meter]
 
     Returns:
+    --------
+
     remaining_points: list(tuples(id, shapely.Point((x, y))))
 
     """

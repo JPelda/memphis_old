@@ -37,14 +37,15 @@ from allocate_inhabitants_to_nodes import allocate_inhabitants_to_nodes
 from accumulate_val_along_path import sum_wc
 from paths_to_dataframe import paths_to_dataframe
 #  TODO reproject data with geopandas better than transform coordinates?
-
+# TODO implement logger, with time logging
+# TODO Build intersections to all roads, then get shortest path.
 #########################################################################
 # LOAD DATA
 #########################################################################
 Data = Data_IO('config' + os.sep + 'test_config.ini')
 
-# gis = Data.read_from_sqlServer('gis')
-# gdf_gis = gpd.GeoDataFrame(gis, crs=Data.coord_system, geometry='SHAPE')
+# gis = Data.read_from_sqlServer('gis_roads')
+# gdf_gis = gpd.GeoDataFrame(gis_roads, crs=Data.coord_system, geometry='SHAPE')
 wc = Data.read_from_sqlServer('wc_per_inhab')
 # Reads graph from file, shp import makes problems.
 graph = Data.read_from_graphml('graph')
@@ -92,10 +93,10 @@ gdf_nodes['wc'] = gdf_nodes['inhabs'] *\
 end_node = osmnx.get_nearest_node(graph, (Data.wwtp.y, Data.wwtp.x))
 
 gdf_nodes['path_to_end_node'] = [nx.shortest_path(graph, index, end_node) if
-                                 row['wc'] != 0 else [] for index, row in
+                                 row.wc != 0 else [] for index, row in
                                  gdf_nodes.iterrows()]
 
-gdf_paths = paths_to_dataframe(gdf_nodes[:10], gdf_edges)
+gdf_paths = paths_to_dataframe(gdf_nodes, gdf_edges)
 
 
 # Accumulates wc along each path.
@@ -103,10 +104,10 @@ gdf_nodes['sum_wc'] = sum_wc(gdf_nodes)
 
 # Allocates water flows to edges. Edge gets the value of the node with lowest
 # wc
-gdf_edges['sum_wc'] = [gdf_nodes['sum_wc'][u] if
-                       gdf_nodes['sum_wc'][u] < gdf_nodes['sum_wc'][v] else
-                       gdf_nodes['sum_wc'][v] for u, v in
-                       zip(gdf_edges['u'], gdf_edges['v'])]
+gdf_edges['sum_wc'] = [gdf_nodes.sum_wc[u] if
+                       gdf_nodes.sum_wc[u] < gdf_nodes.sum_wc[v] else
+                       gdf_nodes.sum_wc[v] for u, v in
+                       zip(gdf_edges.u, gdf_edges.v)]
 
 
 #########################################################################
@@ -147,12 +148,14 @@ census.plot(ax=ax, cmap=cmap_census, vmin=vmin_census,
             vmax=vmax_census,
             column='inhabs',
             alpha=0.25)
-
+gdf_edges.plot(ax=ax, color='green', linewidth=0.4)
 gdf_edges.plot(ax=ax, cmap=cmap_nodes, vmin=vmin_nodes, vmax=vmax_nodes,
                column='sum_wc', linewidth=0.3, alpha=0.3)
+
 gdf_nodes.plot(ax=ax, cmap=cmap_nodes, vmin=vmin_nodes, vmax=vmax_nodes,
                column='sum_wc', markersize=10)
-gdf_paths.plot(ax=ax, color='green')
+#gdf_paths.plot(ax=ax, color='green')
+#gdf_nodes.plot(ax=ax, color='blue')
 # for x, y, txt in zip(gdf_nodes['x'], gdf_nodes['y'], gdf_nodes['inhabs']):
 # ax.annotate(txt, (x, y))
 
@@ -189,10 +192,10 @@ fig.savefig('Göttingen' + '.pdf',
 #                                                      'SHAPE':'GEOMETRY'})
 
 #folder = os.getcwd() + os.sep + 'input'
-#osmnx.save_load.save_graph_shapefile(graph,'graph_goettingen', folder + os.sep)
-#osmnx.save_load.save_gdf_shapefile(gdf_nodes, 'graph_goettingen', folder +
-#                                   os.sep + 'graph_goettingen')
-#osmnx.save_load.save_gdf_shapefile(gdf_edges, 'graph_goettingen', folder +
-#                                   os.sep + 'graph_goettingen')
-#osmnx.save_graphml(graph, 'graph_goettingen.graphml', folder + os.sep)
+#osmnx.save_load.save_graph_shapefile(graph,'goettingen_graph', folder + os.sep)
+#osmnx.save_load.save_gdf_shapefile(gdf_nodes, 'goettingen_graph', folder +
+#                                   os.sep + 'goettingen_graph')
+#osmnx.save_load.save_gdf_shapefile(gdf_edges, 'goettingen_graph', folder +
+#                                   os.sep + 'goettingen_graph')
+#osmnx.save_graphml(graph, 'goettingen.graphml', folder + os.sep)
 
