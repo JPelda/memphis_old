@@ -125,7 +125,7 @@ vmax_census = 100
 vmin_nodes = min(gdf_nodes['wc'])
 vmax_nodes = 100
 vmin_paths = 0
-vmax_paths = 300
+vmax_paths = 30000
 
 sm_census = plt.cm.ScalarMappable(cmap=cmap_census,
                                   norm=plt.Normalize(vmin=vmin_census,
@@ -148,14 +148,14 @@ census.plot(ax=ax, cmap=cmap_census, vmin=vmin_census,
             vmax=vmax_census,
             column='inhabs',
             alpha=0.25)
-gdf_edges.plot(ax=ax, color='green', linewidth=0.4)
+#gdf_edges.plot(ax=ax, color='green', linewidth=0.4)
 gdf_edges.plot(ax=ax, cmap=cmap_nodes, vmin=vmin_nodes, vmax=vmax_nodes,
                column='sum_wc', linewidth=0.3, alpha=0.3)
 
 gdf_nodes.plot(ax=ax, cmap=cmap_nodes, vmin=vmin_nodes, vmax=vmax_nodes,
-               column='sum_wc', markersize=10)
+               column='wc', markersize=10)
 #gdf_paths.plot(ax=ax, color='green')
-#gdf_nodes.plot(ax=ax, color='blue')
+gdf_nodes.plot(ax=ax, color='blue', markersize=5)
 # for x, y, txt in zip(gdf_nodes['x'], gdf_nodes['y'], gdf_nodes['inhabs']):
 # ax.annotate(txt, (x, y))
 
