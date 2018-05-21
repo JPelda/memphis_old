@@ -7,6 +7,7 @@ Created on Wed Feb 21 10:40:53 2018
 
 from shapely.geometry import Point, LineString, Polygon
 import pyproj as pp
+import pandas as pd
 
 def transform_coords(geo, from_coord='epsg:3035', into_coord='epsg:4326'):
     '''Transforms coordinates from given to requested coordinate system.
@@ -19,7 +20,8 @@ def transform_coords(geo, from_coord='epsg:3035', into_coord='epsg:4326'):
     Returns:
         type(geo) transformed to into_coord
     '''
-
+    if type(geo[0]) == pd.core.series.Series:
+        geo = geo[0].tolist()
     geo_as_tuples = [0]*len(geo)
     geo_type = type(geo[0])
     '''

@@ -23,7 +23,7 @@ def paths_to_dataframe(gdf_nodes, gdf_edges):
         to gdf_nodes['path_to_end_node']
     """
 
-    gdf = gdf_edges[:0]
+    gdf = gdf_edges[:]
 
     # Forms a list of tuple from odd or uneven list.
     uv = [(x, arr[i+1]) if i < len(arr) - 1 else () for arr in

@@ -44,103 +44,102 @@ n, e = osmnx.save_load.graph_to_gdfs(graph)
 
 isec = get_intersections(e[:])
 
+G = graph
 
 for index, dic in enumerate(isec):
 #    print("\rindex: {}".format(index), end="")
-
+    print("\r{}".format(index), end="")
     for i, (key, val) in enumerate(dic.items()):
 
-        node =  max(n.index)
         u_master = e.u[index]
         v_master = e.v[index]
         u_slave = e.u[key]
         v_slave = e.v[key]
 
+        G.add_nodes_from([(u_master, graph.nodes[u_master])])
+        G.add_nodes_from([(v_master, graph.nodes[v_master])])
+        G.add_nodes_from([(u_slave, graph.nodes[u_slave])])
+        G.add_nodes_from([(v_slave, graph.nodes[v_slave])])
+
         if type(val) == Point:
-            print("\r{}".format(index))
+
             lines_master = split(e.geometry[index], e.geometry[key])
             lines_slave = split(e.geometry[key], e.geometry[index])
 
-            G = graph
-            G.add_nodes_from([(u_master, graph.nodes[u_master])])
-            G.add_nodes_from([(v_master, graph.nodes[v_master])])
-            G.add_nodes_from([(u_slave, graph.nodes[u_slave])])
-            G.add_nodes_from([(v_slave, graph.nodes[v_slave])])
+        elif type(val) == LineString:
+            lines_master, lines_slave = [val], [val]
 
-            v = node - len(lines_master) + 1
-            u_m = u_master
-            u_s = u_slave
+        elif type(val) == MultiLineString:
+            lines_master, lines_slave = val, val
 
-            G.add_edges_from([(u_m, v,
-                                  {'geometry': lines_master[0],
-                                   'osmid': -1,
-                                   'name': '',
-                                   'highway': '',
-                                   'access': '',
-                                   'oneway': False,
-                                   'length': lines_master[0].length})])
-            G.add_edges_from([(u_s, v,
-                                {'geometry': lines_slave[0],
-                                   'osmid': -1,
-                                   'name': '',
-                                   'highway': '',
-                                   'access': '',
-                                   'oneway': False,
-                                   'length': lines_slave[0].length})])
+        v = max(G.node) + 1
+        G.add_nodes_from([(v, {'osmid': v,
+                               'x': lines_master[0].coords[-1][0],
+                               'y': lines_master[0].coords[-1][1]})])
+
+        G.add_edges_from([(u_master, v,
+                          {'geometry': lines_master[0],
+                           'osmid': -1,
+                           'name': '',
+                           'highway': '',
+                           'access': '',
+                           'oneway': False,
+                           'length': lines_master[0].length})])
+        G.add_edges_from([(u_slave, v,
+                          {'geometry': lines_slave[0],
+                           'osmid': -1,
+                           'name': '',
+                           'highway': '',
+                           'access': '',
+                           'oneway': False,
+                           'length': lines_slave[0].length})])
+        u = v
+
+        for line_m, line_s in zip(list(lines_master)[1:-1],
+                                  list(lines_slave)[1:-1]):
+            v += 1
+            if line_m.length <= line_s.length:
+                line = line_m
+            elif line_m.length > line_s.length:
+                line = line_s
+
+            G.add_nodes_from([(v, {'osmid': v,
+                                   'x': line.coords[-1][0],
+                                   'y': line.coords[-1][1]})])
+
+            G.add_edges_from([(u, v,
+                              {'geometry': line,
+                               'osmid': -1,
+                               'name': '',
+                               'highway': '',
+                               'access': '',
+                               'oneway': False,
+                               'length': line.length})])
             u = v
 
-            for line_m, line_s in zip(list(lines_master)[1:-1],
-                                      list(lines_slave)[1:-1]):
-                v += 1
-                if line_m.length <= line_s.length:
-                    line = line_m
-                elif line_m.length > line_s.length:
-                    line = line_s
+        G.add_nodes_from([(u, {'osmid': v,
+                               'x': lines_master[-1].coords[0][0],
+                               'y': lines_master[-1].coords[0][1]})])
 
-                G.add_edges_from([(u, v,
-                                  {'geometry': line,
-                                   'osmid': -1,
-                                   'name': '',
-                                   'highway': '',
-                                   'access': '',
-                                   'oneway': False,
-                                   'length': line.length})])
-                u = v
+        G.add_edges_from([(u, v_master,
+                          {'geometry': lines_master[-1],
+                           'osmid': -1,
+                           'name': '',
+                           'highway': '',
+                           'access': '',
+                           'oneway': False,
+                           'length': lines_master[-1].length})])
 
-            G.add_edges_from([(u, v_master,
-                                  {'geometry': lines_master[-1],
-                                   'osmid': -1,
-                                   'name': '',
-                                   'highway': '',
-                                   'access': '',
-                                   'oneway': False,
-                                   'length': lines_master[-1].length})])
+        G.add_edges_from([(u, v_slave,
+                          {'geometry': lines_slave[-1],
+                           'osmid': -1,
+                           'name': '',
+                           'highway': '',
+                           'access': '',
+                           'oneway': False,
+                           'length': lines_slave[-1].length})])
 
-            G.add_edges_from([(u, v_slave,
-                                  {'geometry': lines_slave[-1],
-                                   'osmid': -1,
-                                   'name': '',
-                                   'highway': '',
-                                   'access': '',
-                                   'oneway': False,
-                                   'length': lines_slave[-1].length})])
-
-            edge_m = nx.shortest_path(G, u_master, v_master)
-            edge_m_s = nx.shortest_path(G, u_master, v_slave)
-            edge_s = nx.shortest_path(G, u_slave, v_slave)
-            edge_s_m = nx.shortest_path(G, u_slave, v_master)
-            graph = nx.compose(graph, G)
-
-        elif type(val) == LineString or type(val) == MultiLineString:
-            if type(val) == MultiLineString:
-                val = linemerge(val)
-            pass
-
-        else:
-            pass
-
-
-n2, e2 = osmnx.save_load.graph_to_gdfs(graph)
+n2, e2 = osmnx.save_load.graph_to_gdfs(G)
 
 
 
@@ -163,5 +162,5 @@ plt.show()
 #G.nodes[2]['geometry'] = (0, 0)
 #G.nodes[3]['geometry'] = (1,1)
 ##G.nodes[4]['geometry'] = (2,2)
-#folder = 'input'
-#osmnx.save_graphml(graph2, 'goettingen.graphml', folder + os.sep)
+folder = 'input'
+osmnx.save_graphml(G, 'goettingen.graphml', folder + os.sep)

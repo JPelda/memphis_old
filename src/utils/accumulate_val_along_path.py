@@ -20,9 +20,11 @@ def sum_wc(gdf):
         List of floats is in order of gdf_nodes
     """
 
-    dic = {key:0 for key in gdf.index}
+    dic = {key: 0 for key in gdf.index}
+
     for node_list, wc in zip(gdf.path_to_end_node, gdf.wc):
         for key in node_list:
             dic[key] += wc
 
-    return dic
+    arr = [x for x in dic.values()]
+    return arr

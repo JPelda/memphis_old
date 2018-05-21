@@ -50,6 +50,9 @@ class Data_IO:
                                 ['waste_water_treatment_plant_x']),
                           float(self.config['coords']
                                 ['waste_water_treatment_plant_y']))
+        self.city = self.config['Files']['city']
+        self.path_export = eval(self.config['Files']['path_export'])
+        self.path_import = eval(self.config['Files']['path_import'])
 
     def write_to_sqlServer(self, table_name, df, dtype={}):
         '''Writes to SQL-Database.
@@ -197,6 +200,25 @@ class Data_IO:
         sql = ("SELECT {} FROM {}").format(', '.join([x for x in col if
                                                       x is not None]), table)
         return sql
+
+    def write_gdf_to_file(self, gdf, fname='', driver='ESRI Shapefile'):
+        '''Writes to File.
+
+        Args:
+            fname: str, filename can be set in Data_IO.__init__.city
+            gdf: geopandas.GeoDataFrame(), which values are written to file
+
+        Kwargs:
+            driver: driver that are taken for writing.
+
+        Returns:
+        '''
+        if fname != '':
+            fname = self.path_export + os.sep + self.city + '_' + fname
+        else:
+            fname = self.path_export + os.sep + self.city
+
+        gdf.to_file(driver=driver, filename=fname)
 
     def read_from_shp(self, name, path=None):
         '''Reads File into pandas dataframe.
