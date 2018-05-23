@@ -19,7 +19,7 @@ Data = Data_IO('config' + os.sep + 'test_config.ini')
 
 # gis = Data.read_from_sqlServer('gis_roads')
 # gdf_gis = gpd.GeoDataFrame(gis_roads, crs=Data.coord_system, geometry='SHAPE')
-wc = Data.read_from_sqlServer('wc_per_inhab')
+#wc = Data.read_from_sqlServer('wc_per_inhab')
 # Reads graph from file, shp import makes problems.
 graph = Data.read_from_graphml('graph')
 gdf_nodes, gdf_edges = osmnx.save_load.graph_to_gdfs(graph, nodes=True,

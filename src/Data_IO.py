@@ -201,15 +201,12 @@ class Data_IO:
                                                       x is not None]), table)
         return sql
 
-    def write_gdf_to_file(self, gdf, fname='', driver='ESRI Shapefile'):
+    def write_gdf_to_file(self, gdf, fname=''):
         '''Writes to File.
 
         Args:
             fname: str, filename can be set in Data_IO.__init__.city
             gdf: geopandas.GeoDataFrame(), which values are written to file
-
-        Kwargs:
-            driver: driver that are taken for writing.
 
         Returns:
         '''
@@ -218,7 +215,7 @@ class Data_IO:
         else:
             fname = self.path_export + os.sep + self.city
 
-        gdf.to_file(driver=driver, filename=fname)
+        gdf.to_file(filename=fname)
 
     def read_from_shp(self, name, path=None):
         '''Reads File into pandas dataframe.

@@ -23,7 +23,7 @@ def plot_format(xtick_direction='in', ytick_direction='in'):
     rc('ps', usedistiller='xpdf')
     rc('pdf', fonttype=42)
     rc('ps', fonttype=42)
-    rc('figure', figsize = [16, 9])
+    rc('figure', figsize = [6.29921 , 3.54331])
     grid_linewidth = 0.3
     xyLabelsize=10
     labelsize = 10

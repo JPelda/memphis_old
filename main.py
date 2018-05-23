@@ -53,11 +53,15 @@ gdf_gis_b = gpd.GeoDataFrame(gis_b,
                              crs=Data.coord_system, geometry='SHAPE')
 
 wc = Data.read_from_sqlServer('wc_per_inhab')
+wc = wc.drop(0)
+wc['lPERpTIMESd'] = wc['lPERpTIMESd'].astype(float) / 1000
 # Reads graph from file, shp import makes problems.
 graph = Data.read_from_graphml('graph')
 intersection_centroids = osmnx.simplify.clean_intersections(
         graph, tolerance=meter_to_crs_length(20), dead_ends=False)
+
 census = Data.read_from_sqlServer('census')
+gdf_census = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='SHAPE')
 
 pipes_table = Data.read_from_sqlServer('pipes_dn_a_v_v')
 pipes_table['V'] = pipes_table['V'] / 1000
@@ -72,6 +76,10 @@ gdf_sewnet['V'] = [pipes_table.get(key, pipes_table[min(pipes_table.keys(),
                                    key=lambda k: abs(k-key))])['V'] for
                    key in gdf_sewnet['width']]
 
+dhs = Data.read_from_shp('dhs', path=
+                         r"C:\Users\jpelda\Desktop\Stanet FW Stand 2011\shapefile")
+dhs['geometry'] = transform_coords(dhs.geometry, from_coord='epsg:5677')
+gdf_dhs = gpd.GeoDataFrame(dhs, crs=Data.coord_system, geometry='geometry')
 
 #########################################################################
 # C O N D I T I O N I N G
@@ -84,17 +92,10 @@ gdf_nodes, gdf_edges = osmnx.save_load.graph_to_gdfs(graph, nodes=True,
 
 
 # Builds buffer around points of census.
-gdf_census = gpd.GeoDataFrame(census, crs=Data.coord_system,
-                              geometry='SHAPE')
+
 gdf_census['SHAPE_b'] = buffer(gdf_census, Data.x_min, Data.x_max,
                                Data.y_min, Data.y_max)
 
-#  TODO Do we really need to filter nodes for performance issues?
-# singlepoints = merge_points([(id, geo) for id, geo in
-#                             zip(gdf_nodes.osmid, gdf_nodes.geometry)],
-#                            100)
-# spoints = gpd.GeoDataFrame(singlepoints, columns=['osmid', 'SHAPE'],
-#                           crs=Data.coord_system, geometry='SHAPE')
 
 
 #########################################################################
@@ -108,8 +109,7 @@ print('allocation')
 gdf_nodes['inhabs'] = allocate_inhabitants_to_nodes(gdf_census,
                                                     gdf_nodes, graph)
 gdf_nodes['wc'] = gdf_nodes['inhabs'] *\
-                         float(wc[wc.country_l ==
-                                  Data.country].lPERpTIMESd.item())
+                         wc[wc.country_l == Data.country].lPERpTIMESd.item()
 
 # Sets node of graph that is nearest to waste water treatment plant and
 # calculates paths from nodes where nodes['inhabs'] > 0.
@@ -136,7 +136,7 @@ for m, (index, row) in enumerate(gdf_nodes.iterrows()):
                     dic[n] = values[i:]
 
             except nx.NetworkXNoPath:
-                print("No path between {} and wastewater"
+                print("\nNo path between {} and wastewater"
                       "treatment plant with node {}".format(index, end_node))
                 dic[index] = []
 
@@ -144,25 +144,24 @@ for m, (index, row) in enumerate(gdf_nodes.iterrows()):
         dic[index] = []
 
 gdf_nodes['path_to_end_node'] = dic.values()
-#print()
-#print(time.time() - s_time)
-#s_time = time.time()
-#gdf_nodes['path_to_end_node'] = [nx.shortest_path(graph, index, end_node,
-#                                 weight='length') if
-#                                 row.wc != 0 else [] for index, row in
-#                                 gdf_nodes.iterrows()]
-#print(time.time() - s_time)
-
 
 # Accumulates wc along each path.
 gdf_nodes['sum_wc'] = sum_wc(gdf_nodes)
-
+gdf_nodes['V'] = gdf_nodes['sum_wc'] / (1)
 # Allocates water flows to edges. Edge gets the value of the node with lowest
 # wc
 gdf_edges['sum_wc'] = [gdf_nodes.sum_wc[u] if
                        gdf_nodes.sum_wc[u] < gdf_nodes.sum_wc[v] else
                        gdf_nodes.sum_wc[v] for u, v in
                        zip(gdf_edges.u, gdf_edges.v)]
+gdf_edges['V'] = gdf_edges['sum_wc'] / (1)
+pipes_table_V_to_DN = {val['V']:key for key, val in
+                       zip(pipes_table.keys(), pipes_table.values())}
+DN = np.array(list(pipes_table_V_to_DN.values()))
+V = np.array(list(pipes_table_V_to_DN.keys()))
+arr = [DN[np.where(V - sum_wc >= 0)[0][0]] if np.any(V - sum_wc > 0) else
+       DN[-1] if sum_wc == 0 else 0 for sum_wc in gdf_edges['V']]
+gdf_edges['DN'] = arr
 
 gdf_paths = paths_to_dataframe(gdf_nodes, gdf_edges)
 
@@ -170,39 +169,39 @@ gdf_paths = paths_to_dataframe(gdf_nodes, gdf_edges)
 ## E V A L U A T I O N
 ##########################################################################
 print('\nevaluation')
+
 gdf_paths_index_geo_sumwc = {i: (geo, sumwc) for i, geo, sumwc in
                              zip(gdf_paths.index,
                                  gdf_paths.geometry,
                                  gdf_paths.sum_wc) if i != 0}
 gdf_sewnet['geometry_b'] = gdf_sewnet.geometry.buffer(meter_to_crs_length(20))
 
-vals = []
-for index, (geo, width) in enumerate(zip(gdf_sewnet['geometry_b'],
-                                         gdf_sewnet['width'])):
-    arr = []
-    print("\rLeft:{:>10}".format(len(gdf_sewnet) - index), end='')
 
-    for i, item in gdf_paths_index_geo_sumwc.items():
-        if item[0].intersects(geo):
-            arr.append([i, item[1]])
+gdf_copy = gdf_paths
+gdf_paths_spatial_index = gdf_copy.sindex
 
-    if arr != []:
-        vals_keys = np.array([[x[0] for x in arr],
-                        [y[1] for y in arr]])
-        idx = (np.abs(vals_keys[1] - width)).argmin()
-        del gdf_paths_index_geo_sumwc[vals_keys[0][idx]]
-        vals.append(vals_keys[1][idx])
+arr = [0] * len(gdf_sewnet)
+for i, (geo, V) in enumerate(zip(gdf_sewnet.geometry_b, gdf_sewnet.V)):
+    print("\rLeft:{:>10}".format(len(gdf_sewnet.geometry_b) - i), end='')
+    possible_matches_index = list(
+            gdf_paths_spatial_index.intersection(geo.bounds))
+
+    if possible_matches_index != []:
+        possible_matches = gdf_copy.iloc[possible_matches_index]
+        idx = (np.abs(possible_matches.sum_wc - V)).values.argmin()
+        arr[i] = possible_matches.iloc[idx].sum_wc
     else:
-        vals.append(-1)
+        arr[i] = -1
 
-gdf_sewnet['V_generic'] = vals
+gdf_sewnet['V_generic'] = arr
+
 
 dev = {key: {'mean': None, 'max': None, 'min': None, 'std': None} for
-        key in set(gdf_sewnet['width'])}
+       key in set(gdf_sewnet['width'])}
 V_dev = {key: {'mean': None, 'max': None, 'min': None, 'std': None} for
-        key in set(gdf_sewnet['width'])}
+         key in set(gdf_sewnet['width'])}
 V_generic_dev = {key: {'mean': None, 'max': None, 'min': None, 'std': None} for
-        key in set(gdf_sewnet['width'])}
+                 key in set(gdf_sewnet['width'])}
 
 for wdt in dev:
 
@@ -258,8 +257,8 @@ colors = ['white', '#C0C9E4', '#9EADD8', '#6D89CB',
           '#406DBB', '#3960A7', '#2F528F']
 cmap_census, norm_census = from_levels_and_colors(levels, colors)
 
-gdf_paths_levels = [0, 10000, 20000, max(gdf_paths['sum_wc'])]
-gdf_paths_colors = ['lightsalmon', 'tomato', 'r']
+gdf_paths_levels = [0, 800, max(gdf_paths['DN'])]
+gdf_paths_colors = ['lightsalmon', 'r']
 cmap_paths, norm_paths = from_levels_and_colors(gdf_paths_levels,
                                                 gdf_paths_colors)
 
@@ -295,7 +294,7 @@ gdf_sewnet.plot(ax=ax, cmap=cmap_sewnet, norm=norm_sewnet, column="width",
                 linewidth=0.8)
 # for x, y, txt in zip(gdf_nodes['x'], gdf_nodes['y'], gdf_nodes['inhabs']):
 # ax.annotate(txt, (x, y))
-
+#gdf_dhs.plot(ax=ax)
 
 ax.set_xlabel('Longitude')
 ax.set_ylabel('Latitude')
@@ -312,13 +311,13 @@ gdf_gis_r_legend = mlines.Line2D([], [], color=gdf_gis_r_color,
 gdf_sewnet_legend = []
 gdf_sewnet_legend.append(mlines.Line2D([], [], color=gdf_sewnet_colors[0],
                                   linestyle='-', label=
-                                  "Sewage network {} $\leq$ {} "
+                                  "Sewage network {} $[DN]$ $\leq$ x $<$ {} "
                                   "$[DN]$".format(
                                         gdf_sewnet_levels[0],
                                         gdf_sewnet_levels[1])))
 gdf_sewnet_legend.append(mlines.Line2D([], [], color=gdf_sewnet_colors[1],
                                   linestyle='-', label=
-                                  "Sewage network {} $\leq$ {} "
+                                  "Sewage network {} $[DN]$ $\leq$ x $\leq$ {} "
                                   "$[DN]$".format(
                                         gdf_sewnet_levels[1],
                                         gdf_sewnet_levels[2])))
@@ -329,24 +328,24 @@ gdf_path_legend = []
 gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[0],
                                 linestyle='-',
                                 label=
-                                "Waste water flows {} $\leq$ {} "
-                                "$[\\unitfrac{{L}}{{d}}]$".format(
+                                "Generic sewage network {} $[DN]$ $\leq$ x $<$ {} "
+                                "$[DN]$".format(
                                         gdf_paths_levels[0],
                                         gdf_paths_levels[1])))
 gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[1],
                                 linestyle='-',
                                 label=
-                                "Waste water flows {} $\leq$ {} "
-                                "$[\\unitfrac{{L}}{{d}}]$".format(
+                                "Generic sewage network {} $[DN]$ $\leq$ x $\leq$ {} "
+                                "$[DN]$".format(
                                         gdf_paths_levels[1],
                                         gdf_paths_levels[2])))
-gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[2],
-                                linestyle='-',
-                                label=
-                                "Waste water flows {} $\leq$ {:.0f}"
-                                " $[\\unitfrac{{L}}{{d}}]$".format(
-                                        gdf_paths_levels[2],
-                                        gdf_paths_levels[3])))
+#gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[2],
+#                                linestyle='-',
+#                                label=
+#                                "Generic sewage network {} $\leq$ {:.0f}"
+#                                " $[DN]$".format(
+#                                        gdf_paths_levels[2],
+#                                        gdf_paths_levels[3])))
 
 handles = [wwtp_legend] + [gdf_gis_b_legend] + [gdf_gis_r_legend] +\
              gdf_sewnet_legend + legend_empty + gdf_path_legend
@@ -358,7 +357,7 @@ box = ax.get_position()
 
 #ax.legend(handles=handles, loc='lower left', bbox_to_anchor=(0, -0.2),
 #          ncol=3)
-ax.legend(handles=handles, bbox_to_anchor=(1.45,1), borderaxespad=0, ncol=1)
+ax.legend(handles=handles, bbox_to_anchor=(0,-0.14), borderaxespad=0, ncol=3, loc="lower left")
 colorBar_census.ax.set_title("Inhabitants "
                              "\n$[\\unitfrac{Persons}{10.000 m^2}]$",
                              horizontalalignment='left',
@@ -370,11 +369,33 @@ plt.show()
 fig.savefig('Göttingen' + '.pdf',
             filetype='pdf', bbox_inches='tight', dpi=1200)
 
-Data.write_gdf_to_file(census, 'census')
-Data.write_gdf_to_file(gdf_gis_b, 'gis_b')
-Data.write_gdf_to_file(gdf_gis_r, 'gis_r')
-Data.write_gdf_to_file(gdf_paths, 'paths')
-Data.write_gdf_to_file(gdf_sewnet, 'sewnet')
+del census['SHAPE_b']
+census = census.set_geometry('SHAPE')
+Data.write_gdf_to_file(census, 'census.shp')
+
+Data.write_gdf_to_file(gdf_gis_b, 'gis_b.shp')
+Data.write_gdf_to_file(gdf_gis_r, 'gis_r.shp')
+
+del gdf_paths['access']
+del gdf_paths['area']
+del gdf_paths['bridge']
+del gdf_paths['highway']
+del gdf_paths['junction']
+del gdf_paths['key']
+del gdf_paths['lanes']
+del gdf_paths['maxspeed']
+del gdf_paths['name']
+del gdf_paths['oneway']
+del gdf_paths['ref']
+del gdf_paths['service']
+del gdf_paths['tunnel']
+del gdf_paths['width']
+del gdf_paths['osmid']
+Data.write_gdf_to_file(gdf_paths, 'paths.shp')
+
+del gdf_sewnet['geometry_b']
+gdf_sewnet = gdf_sewnet.set_geometry('SHAPE')
+Data.write_gdf_to_file(gdf_sewnet, 'sewnet.shp')
 
 
 #fig.clear()

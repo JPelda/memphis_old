@@ -6,11 +6,12 @@ Created on Wed May  2 11:32:35 2018
 """
 from osmnx import get_nearest_node
 
+
 def allocate_inhabitants_to_nodes(gdf_raster, gdf_nodes, graph):
     """Allocates inhabitans to nodes. Nodes in same raster field will get
     raster's inhabitans divided by amout of nodes within raster. Raster fields
     without nodes are allocated to nearest node.
-    
+
     ARGS:
 
     gdf_raster: geopandas.GeoDataFrame()
@@ -25,28 +26,25 @@ def allocate_inhabitants_to_nodes(gdf_raster, gdf_nodes, graph):
         List of floats is in order of gdf_nodes
     """
 
-    p_within = [0]*len(gdf_raster['SHAPE'])
-    gdf_nodes_osmid_geometry = {int(osmid): geo for osmid, geo in zip(
-        gdf_nodes['osmid'], gdf_nodes['geometry'])}
-    dic = {index: 0 for index, items in gdf_nodes.iterrows()}
-    for i, (point, poly, inhab) in enumerate(zip(gdf_raster['SHAPE'],
-                                                 gdf_raster['SHAPE_b'],
-                                                 gdf_raster['inhabs'])):
+    gdf_nodes_spatial_index = gdf_nodes.sindex
+    dic = {key: 0 for key in gdf_nodes.index}
+    for i, (geo, poly, inhab) in enumerate(
+                                        zip(gdf_raster['SHAPE'],
+                                            gdf_raster['SHAPE_b'],
+                                            gdf_raster['inhabs'])):
         if inhab <= 0:
             continue
         else:
-            p_within[i] = {osmid: inhab for osmid, p in
-                           zip(gdf_nodes_osmid_geometry.keys(),
-                               gdf_nodes_osmid_geometry.values()) if
-                           p.within(poly)}
-            if p_within[i] != {}:
-                val = list(p_within[i].values())[0] / len(p_within[i])
-                p_within[i] = dict.fromkeys(p_within[i], val)
-                for key, val in p_within[i].items():
+            possible_matches_index = list(
+                            gdf_nodes_spatial_index.intersection(geo.bounds))
+
+            if possible_matches_index != []:
+                val = inhab / len(possible_matches_index)
+                for key in possible_matches_index:
                     dic[key] += val
-                    del gdf_nodes_osmid_geometry[key]
             else:
-                key = get_nearest_node(graph, (point.y, point.x))
+                key = get_nearest_node(graph, (geo.y, geo.x))
                 dic[key] += inhab
+
     list_of_inhabs = [dic[key] for key, item in gdf_nodes.iterrows()]
     return list_of_inhabs
