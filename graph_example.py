@@ -42,8 +42,18 @@ G.nodes[5]['inhab'] = 'inhabitants: 8'
 plot_format()
 pos = nx.spring_layout(G)
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(10/2.54 , 5.625/2.54))
 plt.axis('off')
+fig.tight_layout(pad=0, w_pad=0, h_pad=0)
+ax = plt.Axes(fig, [0., 0., 1., 1.])
+ax.set_axis_off()
+fig.add_axes(ax)
+fig.subplots_adjust(bottom = 0)
+fig.subplots_adjust(top = 1)
+fig.subplots_adjust(right = 1)
+fig.subplots_adjust(left = 0)
+
+
 shortest_path = []
 shortest_path.append(nx.shortest_path(G, source= 3, target=0, weight='length'))
 shortest_path.append(nx.shortest_path(G, source= 4, target=0, weight='length'))
@@ -70,16 +80,20 @@ nx.draw_networkx(G, pos=pos, ax=ax, edgelist=edges, node_color='#6D89CB',
 x = [xy[0] for xy in pos.values()]
 y = [xy[1] for xy in pos.values()]
 for xy, lab in zip(pos.values(), nx.get_node_attributes(G, 'inhab').values()):
-    plt.text(xy[0], xy[1]-0.2, s=lab)
+    plt.text(xy[0], xy[1]+0.15, s=lab)
     
 shortest_path = mlines.Line2D([], [], color='tomato', linestyle='-',
                               label='Shortest paths')
 nodes = mlines.Line2D([], [], color='#6D89CB', marker='o', linestyle='',
-                    markersize=15,label="Nodes, with node's number")
+                    markersize=8,label="Nodes, with node's number")
 edges = mlines.Line2D([], [], color='black', linestyle='-',
                       label="Edges, with edge's geologic length")
                       
 handles= [shortest_path] + [nodes] + [edges]
-ax.legend(handles=handles, loc='upper right', ncol=1, mode='')
+ax.legend(handles=handles, loc='best', ncol=1)
 
 plt.show()
+fig.savefig('graph_example.pdf', filetype='pdf', bbox_inches='tight', dpi=1200,
+            pad_inches=0)
+fig.savefig('graph_example.png', filetype='png', bbox_inches='tight', dpi=1200,
+            pad_inches=0)

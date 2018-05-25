@@ -21,7 +21,7 @@ import numpy as np
 import configparser as cfp
 import matplotlib.lines as mlines
 from matplotlib.colors import ListedColormap, from_levels_and_colors
-
+from matplotlib.ticker import FormatStrFormatter
 
 sys.path.append(os.getcwd() + os.sep + 'src')
 print(os.getcwd() + os.sep + 'class')
@@ -147,14 +147,14 @@ gdf_nodes['path_to_end_node'] = dic.values()
 
 # Accumulates wc along each path.
 gdf_nodes['sum_wc'] = sum_wc(gdf_nodes)
-gdf_nodes['V'] = gdf_nodes['sum_wc'] / (1)
+gdf_nodes['V'] = gdf_nodes['sum_wc'] / (7.2)
 # Allocates water flows to edges. Edge gets the value of the node with lowest
 # wc
 gdf_edges['sum_wc'] = [gdf_nodes.sum_wc[u] if
                        gdf_nodes.sum_wc[u] < gdf_nodes.sum_wc[v] else
                        gdf_nodes.sum_wc[v] for u, v in
                        zip(gdf_edges.u, gdf_edges.v)]
-gdf_edges['V'] = gdf_edges['sum_wc'] / (1)
+gdf_edges['V'] = gdf_edges['sum_wc'] / (7.2)
 pipes_table_V_to_DN = {val['V']:key for key, val in
                        zip(pipes_table.keys(), pipes_table.values())}
 DN = np.array(list(pipes_table_V_to_DN.values()))
@@ -242,14 +242,16 @@ V_generic_mean = [V_generic_dev[key]['mean'] for key in k]
 # V I S U A L I S A T I O N
 #########################################################################
 print('\nvisualisation')
-fig, ax = plt.subplots()
 
+fig, ax = plt.subplots(figsize=(16/2.54 , 9/2.54))
+fig.tight_layout(pad=0, w_pad=0, h_pad=0)
 plot_format()
 #color_map()
 #cmap_nodes = plt.get_cmap('WhiteRed')
 #vmin_nodes = min(gdf_nodes['wc'])
 #vmax_nodes = 100
 
+ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
 
 
 levels = [-1, 0, 25, 50, 75, 100, 150, max(gdf_census['inhabs'])]
@@ -257,13 +259,13 @@ colors = ['white', '#C0C9E4', '#9EADD8', '#6D89CB',
           '#406DBB', '#3960A7', '#2F528F']
 cmap_census, norm_census = from_levels_and_colors(levels, colors)
 
-gdf_paths_levels = [0, 800, max(gdf_paths['DN'])]
-gdf_paths_colors = ['lightsalmon', 'r']
+gdf_paths_levels = [800, max(gdf_paths['DN'])]
+gdf_paths_colors = ['r']
 cmap_paths, norm_paths = from_levels_and_colors(gdf_paths_levels,
                                                 gdf_paths_colors)
 
-gdf_sewnet_levels = [0, 800, max(gdf_sewnet['width'])]
-gdf_sewnet_colors = ['greenyellow', 'green']
+gdf_sewnet_levels = [800, max(gdf_sewnet['width'])]
+gdf_sewnet_colors = ['green']
 cmap_sewnet, norm_sewnet = from_levels_and_colors(gdf_sewnet_levels,
                                                   gdf_sewnet_colors)
 
@@ -275,11 +277,14 @@ colorBar_census = fig.colorbar(sm_census, ax=ax)
 census = gpd.GeoDataFrame(census, geometry='SHAPE_b', crs=Data.coord_system)
 census.plot(ax=ax, cmap=cmap_census, norm=norm_census, column='inhabs',
             alpha=0.4)
+colorBar_census.ax.set_ylabel("\\small{Inhabitants} "
+                             "$[\\unitfrac{Persons}{10,000 m^2}]$",
+                             fontsize=10)
 
 gdf_gis_b_color = 'black'
 gdf_gis_b_alpha = 0.2
 gdf_gis_b.plot(ax=ax, color=gdf_gis_b_color, alpha=gdf_gis_b_alpha)
-ax.plot(Data.wwtp.x, Data.wwtp.y, color='black', markersize=20,
+ax.plot(Data.wwtp.x, Data.wwtp.y, color='black', markersize=10,
         marker='*')
 
 gdf_gis_r_color = 'black'
@@ -288,9 +293,9 @@ gdf_gis_r_linewidth = 0.3
 gdf_gis_r.plot(ax=ax, color=gdf_gis_r_color, linewidth=gdf_gis_r_linewidth,
                alpha=gdf_gis_r_alpha)
 
-gdf_paths.plot(ax=ax, cmap=cmap_paths, norm=norm_paths, column="sum_wc",
+gdf_paths[gdf_paths.DN >= 800].plot(ax=ax, cmap=cmap_paths, norm=norm_paths, column="DN",
                linewidth=1)
-gdf_sewnet.plot(ax=ax, cmap=cmap_sewnet, norm=norm_sewnet, column="width",
+gdf_sewnet[gdf_sewnet.width >= 800].plot(ax=ax, cmap=cmap_sewnet, norm=norm_sewnet, column="width",
                 linewidth=0.8)
 # for x, y, txt in zip(gdf_nodes['x'], gdf_nodes['y'], gdf_nodes['inhabs']):
 # ax.annotate(txt, (x, y))
@@ -311,16 +316,16 @@ gdf_gis_r_legend = mlines.Line2D([], [], color=gdf_gis_r_color,
 gdf_sewnet_legend = []
 gdf_sewnet_legend.append(mlines.Line2D([], [], color=gdf_sewnet_colors[0],
                                   linestyle='-', label=
-                                  "Sewage network {} $[DN]$ $\leq$ x $<$ {} "
-                                  "$[DN]$".format(
+                                  "Sewage network DN {} $\leq$ x $<$ DN {} "
+                                  "".format(
                                         gdf_sewnet_levels[0],
                                         gdf_sewnet_levels[1])))
-gdf_sewnet_legend.append(mlines.Line2D([], [], color=gdf_sewnet_colors[1],
-                                  linestyle='-', label=
-                                  "Sewage network {} $[DN]$ $\leq$ x $\leq$ {} "
-                                  "$[DN]$".format(
-                                        gdf_sewnet_levels[1],
-                                        gdf_sewnet_levels[2])))
+#gdf_sewnet_legend.append(mlines.Line2D([], [], color=gdf_sewnet_colors[1],
+#                                  linestyle='-', label=
+#                                  "Sewage network DN {} $\leq$ x $\leq$ DN {} "
+#                                  "".format(
+#                                        gdf_sewnet_levels[1],
+#                                        gdf_sewnet_levels[2])))
 
 legend_empty = [mlines.Line2D([], [], color='None', linestyle='')]
 #,                mlines.Line2D([], [], color='None', linestyle='')]
@@ -328,17 +333,17 @@ gdf_path_legend = []
 gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[0],
                                 linestyle='-',
                                 label=
-                                "Generic sewage network {} $[DN]$ $\leq$ x $<$ {} "
-                                "$[DN]$".format(
+                                "Generic sewage network DN {} $\leq$ x $<$"
+                                " DN {}".format(
                                         gdf_paths_levels[0],
                                         gdf_paths_levels[1])))
-gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[1],
-                                linestyle='-',
-                                label=
-                                "Generic sewage network {} $[DN]$ $\leq$ x $\leq$ {} "
-                                "$[DN]$".format(
-                                        gdf_paths_levels[1],
-                                        gdf_paths_levels[2])))
+#gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[1],
+#                                linestyle='-',
+#                                label=
+#                                "Generic sewage network DN {} $\leq$ x $\leq$"
+#                                " DN {}".format(
+#                                        gdf_paths_levels[1],
+#                                        gdf_paths_levels[2])))
 #gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[2],
 #                                linestyle='-',
 #                                label=
@@ -348,7 +353,7 @@ gdf_path_legend.append(mlines.Line2D([], [], color=gdf_paths_colors[1],
 #                                        gdf_paths_levels[3])))
 
 handles = [wwtp_legend] + [gdf_gis_b_legend] + [gdf_gis_r_legend] +\
-             gdf_sewnet_legend + legend_empty + gdf_path_legend
+            gdf_sewnet_legend + gdf_path_legend
 
 # Shrink current axis's height by 10% on the bottom
 box = ax.get_position()
@@ -357,41 +362,40 @@ box = ax.get_position()
 
 #ax.legend(handles=handles, loc='lower left', bbox_to_anchor=(0, -0.2),
 #          ncol=3)
-ax.legend(handles=handles, bbox_to_anchor=(0,-0.14), borderaxespad=0, ncol=3, loc="lower left")
-colorBar_census.ax.set_title("Inhabitants "
-                             "\n$[\\unitfrac{Persons}{10.000 m^2}]$",
-                             horizontalalignment='left',
-                             fontsize=10)
+
+leg = ax.legend(handles=handles, bbox_to_anchor=(0.5,-0.15), borderaxespad=0.1,
+                ncol=2, loc=9)
+leg.get_frame().set_edgecolor('black')
+leg.get_frame().set_linewidth(0.5)
 
 plt.margins(0,0, tight=True)
 plt.show()
 
-fig.savefig('Göttingen' + '.pdf',
-            filetype='pdf', bbox_inches='tight', dpi=1200)
-
-del census['SHAPE_b']
-census = census.set_geometry('SHAPE')
-Data.write_gdf_to_file(census, 'census.shp')
+fig.savefig('Göttingen.pdf', filetype='pdf', bbox_inches='tight', dpi=1200)
+fig.savefig('Göttingen.png', filetype='png', bbox_inches='tight', dpi=1200)
+#del census['SHAPE_b']
+#census = census.set_geometry('SHAPE')
+#Data.write_gdf_to_file(census, 'census.shp')
 
 Data.write_gdf_to_file(gdf_gis_b, 'gis_b.shp')
 Data.write_gdf_to_file(gdf_gis_r, 'gis_r.shp')
 
-del gdf_paths['access']
-del gdf_paths['area']
-del gdf_paths['bridge']
-del gdf_paths['highway']
-del gdf_paths['junction']
-del gdf_paths['key']
-del gdf_paths['lanes']
-del gdf_paths['maxspeed']
-del gdf_paths['name']
-del gdf_paths['oneway']
-del gdf_paths['ref']
-del gdf_paths['service']
-del gdf_paths['tunnel']
-del gdf_paths['width']
-del gdf_paths['osmid']
-Data.write_gdf_to_file(gdf_paths, 'paths.shp')
+#del gdf_paths['access']
+#del gdf_paths['area']
+#del gdf_paths['bridge']
+#del gdf_paths['highway']
+#del gdf_paths['junction']
+#del gdf_paths['key']
+#del gdf_paths['lanes']
+#del gdf_paths['maxspeed']
+#del gdf_paths['name']
+#del gdf_paths['oneway']
+#del gdf_paths['ref']
+#del gdf_paths['service']
+#del gdf_paths['tunnel']
+#del gdf_paths['width']
+#del gdf_paths['osmid']
+#Data.write_gdf_to_file(gdf_paths, 'paths.shp')
 
 del gdf_sewnet['geometry_b']
 gdf_sewnet = gdf_sewnet.set_geometry('SHAPE')
