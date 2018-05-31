@@ -1,0 +1,11 @@
+﻿UPLOAD OF SHP
+--> all shp relevant files must be in same folder!
+open OSGeo4W Shell:
+ogr2ogr –f MySQL MySQL:database_name,host=localhost,user=database_username,password=database_password path/to/shapefile  -nln datatable_name -update -overwrite -lco engine=MYISAM.
+
+ADD: -a_srs "EPSG:4326"
+Where you need to edit the bold word written above according to system configuration and need.
+
+Note: If table and its column is not created, then the above command will automatically will create the table name as “datatable_name” as indicated above. You may also define SRS by giving argument as  ‘-a_srs “EPSG:4326″‘.
+
+Reference : http://www.bostongis.com/PrinterFriendly.aspx?content_name=ogr_cheatsheet
