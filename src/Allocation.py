@@ -1,61 +1,88 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 21 15:54:23 2018
+Created on Wed May  2 11:32:35 2018
 
-@author: adifischerson
+@author: jpelda
 """
-
-
-import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Polygon
-
+from osmnx import get_nearest_node
 
 
 class Allocation:
+
     def __init__(self):
         pass
 
-    def allocate_censusgrid_to_polygons(self, polygons, census):
-        '''
-        input:   polygons as np.array([Polygon(coords), area])
-                 census as np.array([Polygon(x0, y0, x1, y1]))
-        All innputs must be in same coordinate system. Output is the input's
-        coordinate system
-        
-        output:  ('polygons', inhab)
-        Order of output array of polygons is same like input array of polygons.
-        '''
-        intersections = polygons.overlay(polygons, census, how="intersection")
-        '''
-        res_intersection = gpd.overlay(df1, df2, how='intersection')
-        
-        res_intersection
-           df1  df2                             geometry
-        0    1    1  POLYGON ((2 1, 1 1, 1 2, 2 2, 2 1))
-        1    2    1  POLYGON ((3 3, 3 2, 2 2, 2 3, 3 3))
-        2    2    2  POLYGON ((3 4, 4 4, 4 3, 3 3, 3 4))
-        '''
-        polys = gpd.overlay(polygons, census, how="intersection")
-        # TODO Do something with polys, see docs for gpd.overlay()
+    def alloc_inhabs_to_nodes(self, gdf_raster, gdf_nodes, graph):
+        """Allocates inhabitans to nodes. Nodes in same raster field will get
+        raster's inhabitans divided by amout of nodes within raster. Raster
+        fields without nodes are allocated to nearest node.
 
-        return x, y, inhab
+        ARGS:
+        -----
+        gdf_raster: geopandas.GeoDataFrame()
+            gdf['SHAPE'], gdf['SHAPE_b'], gdf['inhabs']
+        gdf_nodes: geopandas.GeoDataFrame()
+            gdf['osmid'], gdf['geometry']
+        graph: nx.Graph()
 
-    def calculate_wastewaterflow(self, sql_query, engine):
-        # TODO
-        # multiply column 'Inhabitants' from db-Table "inhabitants" of DB
-        # MEMPHIS_Output with newTable MEMPHIS_Input"wastewaterflow per Person"
-        return wastewaterflow
-        pass
+        RETURNS:
+        --------
+        list_of_inhabs: list(floats)
+            List of floats is in order of gdf_nodes
+        """
 
-    def allocate_centroids(self):
-        # assign wwflow to centroids and allocate centr. to nearest Edge
-            # -> comulate all wastewaterflows
-        return sawageflow
+        gdf_nodes_spatial_index = gdf_nodes.sindex
+        dic = {key: 0 for key in gdf_nodes.index}
+        for i, (geo, poly, inhab) in enumerate(
+                                            zip(gdf_raster['SHAPE'],
+                                                gdf_raster['SHAPE_b'],
+                                                gdf_raster['inhabs'])):
+            if inhab <= 0:
+                continue
+            else:
+                possible_matches_index = list(
+                                gdf_nodes_spatial_index.intersection(
+                                        geo.bounds))
 
+                if possible_matches_index != []:
+                    val = inhab / len(possible_matches_index)
+                    for key in possible_matches_index:
+                        dic[key] += val
+                else:
+                    key = get_nearest_node(graph, (geo.y, geo.x))
+                    dic[key] += inhab
 
-if __name__ == "__main__":
-    print('main')
+        list_of_inhabs = [dic[key] for key, item in gdf_nodes.iterrows()]
+        return list_of_inhabs
 
-else:
-    pass
+    def alloc_nodes_to_inhabs(self, gdf_raster, gdf_nodes):
+        """Allocates points of gdf to fields of gdf_census.
+
+        ARGS:
+        -----
+        gdf_raster: geopandas.GeoDataFrame()
+            gdf_raster['inhabs']
+        gdf_nodes: geopandas.GeoDataFrame()
+            gdf_nodes['geometry'].boundary
+
+        RETURNS:
+        --------
+        list_of_inhabs: list(floats)
+            List of floats is in order of gdf_nodes
+        """
+
+        gdf_raster_spatial_index = gdf_raster.sindex
+        arr = [0] * len(gdf_nodes)
+
+        for i, geo in enumerate(gdf_nodes['geometry']):
+
+            possible_matches_index = list(
+                                gdf_raster_spatial_index.intersection(
+                                        geo.bounds))
+            possible_matches = gdf_raster.iloc[possible_matches_index]
+            precise_matches = possible_matches[
+                    possible_matches.contains(geo)]
+            if not precise_matches.empty:
+                arr[i] = precise_matches['inhabs'].values[0]
+
+        return arr
