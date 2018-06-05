@@ -9,6 +9,7 @@ from shapely.geometry import Point, LineString, Polygon
 import pyproj as pp
 import pandas as pd
 
+
 def transform_coords(geo, from_coord='epsg:3035', into_coord='epsg:4326'):
     '''Transforms coordinates from given to requested coordinate system.
     
@@ -72,16 +73,27 @@ def transform_coords(geo, from_coord='epsg:3035', into_coord='epsg:4326'):
     return ret
 
 
-def meter_to_crs_length(length, crs="EPSG:4326"):
-    """Transforms meters into length based on crs.
+def transform_length(length, crs_from="EPSG:32633", crs_into="EPSG:4326"):
+    """Transforms length into length based on crs.
+        It is a little bit imprecise. For better results use 
+        method crs_length_to_meter.
 
-    Args:
+    ARGS:
+    -----
     length: float [meter]
 
-    Returns:
-    length: float [crs based]
+    KWARGS:
+    ------
+    crs_from: str
+        coord system of length
+    crs_into: str
+        coord system in which length shall be converted
 
+    RETURNS:
+    --------
+    length: float [crs based]
     """
+
     from shapely.ops import transform
     from shapely.geometry import LineString
     from functools import partial
@@ -89,9 +101,31 @@ def meter_to_crs_length(length, crs="EPSG:4326"):
 
     length = LineString([(0, 0), (length, 0)])
     project = partial(pyproj.transform,
-                      pyproj.Proj(init="EPSG:32633"),
-                      pyproj.Proj(init=crs))
+                      pyproj.Proj(init=crs_from),
+                      pyproj.Proj(init=crs_into))
     length = transform(project, length)
     length = length.length
 
     return length
+
+
+def crs_length_to_meter(linestring, crs='WGS84'):
+    """Transforms crs_length into meters.
+
+    ARGS:
+    -----
+    linestring: shapely.geometry.LineString
+
+    RETURNS:
+    -------
+    length: float [m]
+    """
+
+    import pyproj
+    geod = pyproj.Geod(ellps=crs)
+    angle1, angle2, distance = geod.inv(linestring.xy[0][0],
+                                        linestring.xy[1][0],
+                                        linestring.xy[0][1],
+                                        linestring.xy[1][1])
+    return distance
+

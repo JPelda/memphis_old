@@ -34,8 +34,9 @@ class Clustering():
             dict.keys == cluster_keys, dict.values == len(items of gdfs) per
             cluter_key
         '''
-
-        rang = np.arange(0, np.around(max(keys), decimals=-1) + 5, 5)
+        maxi_val = np.around(max(keys))
+        mini_val = 0
+        rang = np.arange(mini_val, np.around(maxi_val, decimals=-1) + 5, 5)
         rang = np.insert(rang, 0, -1)
         rang = {key: 0 for key in rang}
 
@@ -46,15 +47,17 @@ class Clustering():
             if key == -1:
                 rang[key] += val
             else:
-                rang[int((np.around(key / 5, decimals=0) * 5))] += val
+                rang[int(np.around(key / 5, decimals=0) * 5)] += val
         return rang
 
-    def V_of_best_pts_within_overlay_pts(self, gdf, gdf_orig, buffer):
+    def best_pts_within_overlay_pts(self, comp_val, gdf, gdf_orig, buffer):
         '''Selects pts in gdf, that match to pts in gdf_orig,
         clustered to 0.25, 0.5, 0.75, 1....
 
         ARGS:
         -----
+        comp_val: str
+            the col_name by which the best point is compared to gdf_orig
         gdf: geopandas.DataFrame()
             gdf with col 'geometry' that is matched with gdf_orig.
         gdf_orig: geopandas.DataFrame()
@@ -63,11 +66,15 @@ class Clustering():
             Buffer around gdf_orig['geometry'] in [m].
 
         RETURNS:
-        rang: gdf
+        --------
+        rang: dict
+            dictionary of gdf's
         '''
         # TODO mark keys, where no V of sewage system exists.
-        keys = set(gdf_orig.V)
-        rang = np.arange(0, np.around(max(keys), decimals=3), 0.25)
+        maxi_val = 0.25
+        mini_val = 0
+        rang = np.arange(mini_val, np.around(maxi_val + 0.01, decimals=3),
+                         0.01)
         rang = np.insert(rang, 0, -1)
         rang = {key: [] for key in rang}
 
@@ -78,16 +85,18 @@ class Clustering():
 
         sindex = gdf_.sindex
 
-        for i, (geo, V) in enumerate(zip(geos, gdf_o['V'])):
+        for i, (geo, val) in enumerate(zip(geos, gdf_o[comp_val])):
             print("\rLeft:{:>10}".format(len(geos) - i), end='')
 
-            if isinstance(V, (float, int)) and V != np.nan:
+            if isinstance(val, (float, int)) and val != np.nan\
+                    and val < maxi_val:
                 poss_matches_i = list(sindex.intersection(geo.bounds))
 
                 if poss_matches_i != []:
                     poss_matches = gdf_.iloc[poss_matches_i]
-                    idx = np.abs(poss_matches.V - V).values.argmin()
-                    rang[np.around(V / 0.25, decimals=0) * 0.25].append(
-                                poss_matches.iloc[idx].V)
+                    idx = np.abs(poss_matches[comp_val]
+                                 - val).values.argmin()
+                    rang[np.around(val / 0.01, decimals=0) * 0.01].append(
+                        poss_matches.iloc[idx])
 
         return rang

@@ -84,7 +84,7 @@ for xy, lab in zip(pos.values(), nx.get_node_attributes(G, 'inhab').values()):
     
 shortest_path = mlines.Line2D([], [], color='tomato', linestyle='-',
                               label='Shortest paths')
-nodes = mlines.Line2D([], [], color='#6D89CB', marker='o', linestyle='',
+nodes = mlines.Line2D([], [], color='#4472C4', marker='o', linestyle='',
                     markersize=8,label="Nodes, with node's number")
 edges = mlines.Line2D([], [], color='black', linestyle='-',
                       label="Edges, with edge's geologic length")
