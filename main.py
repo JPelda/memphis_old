@@ -91,10 +91,11 @@ sew_net['V'] = conv.DN_to_V(sew_net)
 gdf_sewnet = gpd.GeoDataFrame(sew_net, crs=Data.coord_system, geometry='SHAPE')
 
 
-path = r"C:\Users\jpelda\Desktop\Stanet FW Stand 2011\shapefile"
-dhs = Data.read_from_shp('dhs', path=path)
-dhs['geometry'] = transform_coords(dhs.geometry, from_coord='epsg:5677')
-gdf_dhs = gpd.GeoDataFrame(dhs, crs=Data.coord_system, geometry='geometry')
+#path = r"C:\Users\jpelda\Desktop\Stanet FW Stand 2011\shapefile"
+#dhs = Data.read_from_shp('dhs', path=path)
+#dhs['geometry'] = transform_coords(dhs.geometry, from_coord='epsg:5677')
+#gdf_dhs = gpd.GeoDataFrame(dhs, crs=Data.coord_system, geometry='geometry')
+#Pfad nicht vorhanden
 
 #########################################################################
 # C O N D I T I O N I N G
