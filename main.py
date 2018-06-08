@@ -11,14 +11,10 @@ import sys
 import time
 import pandas as pd
 import geopandas as gpd
-import matplotlib.pyplot as plt
 
 import osmnx
 import numpy as np
-import matplotlib.lines as mlines
-from matplotlib.colors import from_levels_and_colors
-from matplotlib.ticker import FormatStrFormatter
-from shapely.geometry import MultiPoint, MultiLineString
+from shapely.geometry import MultiPoint, MultiLineString, Polygon
 
 sys.path.append(os.getcwd() + os.sep + 'src')
 sys.path.append(os.getcwd() + os.sep + 'src' + os.sep + 'utils')
@@ -28,10 +24,10 @@ from Conditioning import Conditioning
 from Allocation import Allocation
 from wcPERinhab import wcPERinhab
 from merge_points import merge_points
-from transformations_of_crs_values import transform_coords, transform_length
+from transformations_of_crs_values import transform_coords, transform_length,\
+transform_area
 from plotter import plot_format, color_map
 from buffer import buffer
-from Allocation import Allocation
 from accumulate_val_along_path import sum_wc
 from paths_to_dataframe import paths_to_dataframe
 from shortest_paths import shortest_paths
@@ -55,9 +51,20 @@ gdf_gis_r = gpd.GeoDataFrame(gis_r, crs=Data.coord_system, geometry='SHAPE')
 gis_b = Data.read_from_sqlServer('gis_buildings')
 gdf_gis_b = gpd.GeoDataFrame(gis_b, crs=Data.coord_system, geometry='SHAPE')
 
+gis_cat = Data.read_from_sqlServer('gis_categories')
+gis_cat['cmPsma'] = gis_cat['cmPsma'].str.replace(',', '.')
+gis_cat = gis_cat[gis_cat['cmPsma'] != '']
+gis_cat = gis_cat[gis_cat['cmPsma'] != '?']
+gis_cat['cmPsma'] = gis_cat['cmPsma'].astype(float)
+
+gdf_gis_b['area'] = transform_area(gdf_gis_b.geometry)
+gdf_gis_b['wc'] = alloc.alloc_wc_to_type(gis_cat, gdf_gis_b['type'].values) *\
+                    gdf_gis_b['area'] / (8760 * 3600)
+
+
 wc = Data.read_from_sqlServer('wc_per_inhab')
 wc = wc.drop(0)
-wc['lPERpTIMESh'] = wc['lPERpTIMESd'].astype(float) / 1000 / (24 * 3600)
+wc['cmPERpTIMESh'] = wc['lPERpTIMESd'].astype(float) / 1000 / (24 * 3600)
 
 graph = Data.read_from_graphml('graph')
 #intersection_centroids = osmnx.simplify.clean_intersections(
@@ -113,6 +120,8 @@ geo1 = [x[1] for x in gdf_sewnet['SHAPE'].boundary]
 mpt = MultiPoint(geo0 + geo1)
 convex_hull = mpt.convex_hull
 gdf_census = gdf_census[gdf_census.within(convex_hull)]
+gdf_gis_r = gdf_gis_r[gdf_gis_r.within(convex_hull)]
+gdf_gis_b = gdf_gis_b[gdf_gis_b.within(convex_hull)]
 
 #########################################################################
 # A L L O C A T I O N
@@ -124,8 +133,9 @@ gdf_census = gdf_census[gdf_census.within(convex_hull)]
 print('allocation')
 gdf_nodes['inhabs'] = alloc.alloc_inhabs_to_nodes(gdf_census, gdf_nodes, graph)
 gdf_nodes['wc'] = gdf_nodes['inhabs'] *\
-                         wc[wc.country_l == Data.country].lPERpTIMESh.item() *\
-                         1.6
+                         wc[wc.country_l ==
+                            Data.country].cmPERpTIMESh.item() * 1.6
+gdf_nodes['wc'] += alloc.alloc_wc_from_b_to_node(gdf_gis_b, gdf_nodes, graph)
 
 # Sets node of graph that is nearest to waste water treatment plant and
 # calculates paths from nodes where nodes['inhabs'] > 0.
@@ -297,7 +307,8 @@ vis = Graphen()
 x_label = "$\\dot{V}$ of sewage network $[\\unitfrac{m^3}{s}]$"
 y_label = "Distribution of $\\dot{V}$ of \ngeneric network"
 " $[\\unitfrac{m^3}{s}]$"
-vis.plot_boxplot(boxplot_V_over_V_pat, Data.city, name='boxplot_distr_V_over_V',
+vis.plot_boxplot(boxplot_V_over_V_pat, Data.city,
+                 name='boxplot_distr_V_over_V',
                  x_label=x_label, y_label=y_label, y_scale='log',
                  x_rotation=90, path_export=os.getcwd())
 
@@ -334,9 +345,44 @@ vis.plot_distr_of_nodes(dis_sew_in_inh, dis_pat_in_inh, dis_cen_in_inh,
 vis.plot_map(gdf_census,
              gdf_paths[gdf_paths['V'] >= 0.01],
              gdf_sewnet[gdf_sewnet['DN'] >= 0.80], gdf_gis_b, gdf_gis_r,
-             Data.coord_system, Data.wwtp.x, Data.wwtp.y, Data.city,
+             Data.coord_system, Data.city, Data.wwtp.x, Data.wwtp.y, 
              path_export=os.getcwd())
 
+
+geo0 = [x[0] for x in gdf_sewnet['SHAPE'][gdf_sewnet['DN'] >= 0.8].boundary] 
+geo1 = [x[1] for x in gdf_sewnet['SHAPE'][gdf_sewnet['DN'] >= 0.8].boundary]
+geo2 = [x[0] for x in gdf_paths['geometry'][gdf_paths['V'] >= 0.01].boundary]
+geo3 = [x[1] for x in gdf_paths['geometry'][gdf_paths['V'] >= 0.01].boundary]
+mpt = MultiPoint(geo0 + geo1 + geo2 + geo3)
+
+convex_hull = mpt.convex_hull
+gdf_gis_b_cut = gdf_gis_b[gdf_gis_b.within(convex_hull)]
+gdf_gis_r_cut = gdf_gis_r[gdf_gis_r.within(convex_hull)]
+gdf_census_cut = gdf_census[gdf_census.within(convex_hull)]
+
+vis.plot_map(gdf_census_cut, gdf_paths[gdf_paths['V'] >= 0.01],
+             gdf_sewnet[gdf_sewnet['DN'] >= 0.80], gdf_gis_b_cut, gdf_gis_r_cut,
+             Data.coord_system, 
+             Data.city + '_cut_ge_DN800', Data.wwtp.x, Data.wwtp.y,
+             path_export=os.getcwd())
+
+area = Polygon([[9.9336125704,51.5358519306],[9.9619366976,51.5358519306],
+                [9.9619366976,51.5469020742],[9.9336125704,51.5469020742],
+                [9.9336125704,51.5358519306]])
+gdf_gis_b_cut = gdf_gis_b[gdf_gis_b.within(area)]
+gdf_gis_r_cut = gdf_gis_r[gdf_gis_r.within(area)]
+gdf_census_cut = gdf_census[gdf_census.within(area)]
+gdf_paths_cut = gdf_paths[gdf_paths.within(area)]
+gdf_sewnet_cut = gdf_sewnet[gdf_sewnet.within(area)]
+
+vis.plot_map(gdf_census_cut, gdf_paths_cut,
+             gdf_sewnet_cut, gdf_gis_b_cut, gdf_gis_r_cut,
+             Data.coord_system, Data.city + '_cut_area',
+             area.centroid.x,area.centroid.y,
+             path_export=os.getcwd(), paths_lw=3, sewnet_lw=1)
+    
+    
+    
 vis.plot_length_over_V(length_over_V_sew, length_over_V_pat)
 
 

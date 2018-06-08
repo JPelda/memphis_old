@@ -6,6 +6,8 @@ Created on Wed Feb 21 10:40:53 2018
 """
 
 from shapely.geometry import Point, LineString, Polygon
+import shapely.ops as ops
+from functools import partial
 import pyproj as pp
 import pandas as pd
 
@@ -94,16 +96,11 @@ def transform_length(length, crs_from="EPSG:32633", crs_into="EPSG:4326"):
     length: float [crs based]
     """
 
-    from shapely.ops import transform
-    from shapely.geometry import LineString
-    from functools import partial
-    import pyproj
-
     length = LineString([(0, 0), (length, 0)])
-    project = partial(pyproj.transform,
-                      pyproj.Proj(init=crs_from),
-                      pyproj.Proj(init=crs_into))
-    length = transform(project, length)
+    project = partial(pp.transform,
+                      pp.Proj(init=crs_from),
+                      pp.Proj(init=crs_into))
+    length = ops.transform(project, length)
     length = length.length
 
     return length
@@ -121,11 +118,43 @@ def crs_length_to_meter(linestring, crs='WGS84'):
     length: float [m]
     """
 
-    import pyproj
-    geod = pyproj.Geod(ellps=crs)
+    geod = pp.Geod(ellps=crs)
     angle1, angle2, distance = geod.inv(linestring.xy[0][0],
                                         linestring.xy[1][0],
                                         linestring.xy[0][1],
                                         linestring.xy[1][1])
     return distance
+
+def transform_area(geom, crs_from="EPSG:4326"):
+    """Transforms area into are based on crs.
+    
+    ARGS:
+    ----
+    geom: list
+        List contains geometric objects.
+    KWARGS:
+    ------
+    crs_from: str
+        coord system of geom
+    crs_into: str
+        coord system defining the unit of return
+    
+    RETURNS:
+    -------
+    area: [floats] [crs based]
+        EPSG:3035 returns area [m]
+    """
+
+    geom_area = [0] * len(geom)
+
+    for index, geo in enumerate(geom):
+        g = ops.transform(partial(pp.transform,
+                                      pp.Proj(init=crs_from),
+                                      pp.Proj(proj='aea',
+                                              lat1=geo.bounds[1],
+                                              lat2=geo.bounds[3])),
+                                  geo)
+        geom_area[index] = g.area
+
+    return geom_area
 

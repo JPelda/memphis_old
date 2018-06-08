@@ -13,7 +13,6 @@ def shortest_paths(graph, gdf, end_node):
 
     Args:
     -----
-
     graph: networkx.Graph()
            The graph for which the shortest paths are calculated.
     gdf: geopandas.DataFrame()
@@ -23,7 +22,6 @@ def shortest_paths(graph, gdf, end_node):
 
     Returns:
     --------
-
     dic.values(): giving all paths for each gdf
 
     """

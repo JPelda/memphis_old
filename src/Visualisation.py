@@ -17,15 +17,17 @@ from plotter import plot_format, color_map
 from matplotlib.patches import Rectangle
 
 
+
 class Graphen:
     def __init__(self):
         pass
 
     def plot_map(self, gdf_census, gdf_paths, gdf_sewnet, gdf_gis_b,
-                 gdf_gis_r, coord_sys, wwtp_x, wwtp_y, city, path_export=''):
+                 gdf_gis_r, coord_sys, city,
+                 wwtp_x=None, wwtp_y=None, path_export='',
+                 paths_lw=1, sewnet_lw=0.65):
 
         fig, ax = plt.subplots(figsize=(16 / 2.54, 9 / 2.54))
-        fig.tight_layout(pad=0, w_pad=0, h_pad=0)
         plot_format()
 
         # color_map()
@@ -57,23 +59,30 @@ class Graphen:
         gdf_census.set_geometry = gdf_census['SHAPE_b']
         gdf_census.plot(ax=ax, cmap=cmap_census, norm=norm_census,
                         column='inhabs', alpha=0.4)
+
         colorBar_census.ax.set_ylabel("\\small{Inhabitants} "
-                                      "$[\\unitfrac{Persons}{10,000 m^2}]$",
-                                      fontsize=10)
+                                      "$[\\unitfrac{Persons}{10,000  m^2}]$",
+                                      fontsize=10,
+                                      )
 
         gdf_gis_b_color = 'black'
         gdf_gis_b_alpha = 0.2
         gdf_gis_b.plot(ax=ax, color=gdf_gis_b_color, alpha=gdf_gis_b_alpha)
-        ax.plot(wwtp_x, wwtp_y, color='black', markersize=10, marker='*')
-
+        
+        wwtp_legend = []
+        if wwtp_x and wwtp_y is not None:
+            ax.plot(wwtp_x, wwtp_y, color='black', markersize=10, marker='*')
+            wwtp_legend = mlines.Line2D([], [], color='black', marker='*',
+                                    linestyle='None', markersize=10,
+                                    label='Waste water treatment plant')
         gdf_gis_r_color = 'black'
         gdf_gis_r_alpha = 0.3
         gdf_gis_r_linewidth = 0.3
         gdf_gis_r.plot(ax=ax, color=gdf_gis_r_color,
                        linewidth=gdf_gis_r_linewidth, alpha=gdf_gis_r_alpha)
 
-        gdf_paths.plot(ax=ax, color='r', linewidth=1)
-        gdf_sewnet.plot(ax=ax, color='green', linewidth=0.65)
+        gdf_paths.plot(ax=ax, color='r', linewidth=paths_lw)
+        gdf_sewnet.plot(ax=ax, color='green', linewidth=sewnet_lw)
 
 
         # gdf_paths[gdf_paths.DN >= 800].plot(ax=ax, cmap=cmap_paths, norm=norm_paths,
@@ -86,10 +95,8 @@ class Graphen:
 
         ax.set_xlabel('Longitude')
         ax.set_ylabel('Latitude')
+        
 
-        wwtp_legend = mlines.Line2D([], [], color='black', marker='*',
-                                    linestyle='None', markersize=10,
-                                    label='Waste water treatment plant')
         gdf_gis_b_legend = mlines.Line2D(
                 [], [], color=gdf_gis_b_color, marker='h', linestyle='None',
                 markersize=10, label="Buildings", alpha=gdf_gis_b_alpha)
@@ -145,8 +152,11 @@ class Graphen:
         #                                " $[DN]$".format(
         #                                        gdf_paths_levels[2],
         #                                        gdf_paths_levels[3])))
-
-        handles = [wwtp_legend] + [gdf_gis_b_legend] + [gdf_gis_r_legend] +\
+        if wwtp_legend == []:
+            handles = [gdf_gis_b_legend] + [gdf_gis_r_legend] +\
+                   gdf_sewnet_legend + gdf_path_legend
+        else:
+            handles = [wwtp_legend] + [gdf_gis_b_legend] + [gdf_gis_r_legend] +\
                    gdf_sewnet_legend + gdf_path_legend
 
         # Shrink current axis's height by 10% on the bottom
@@ -158,22 +168,21 @@ class Graphen:
         # bbox_to_anchor=(0, -0.2),
         #  ncol=3)
 
-        leg = ax.legend(handles=handles, bbox_to_anchor=(0.5, -0.15),
-                        borderaxespad=0.1, ncol=2, loc=9)
+        leg = plt.legend(handles=handles, bbox_to_anchor=(0.5, -0.13),
+                        borderaxespad=0.12, ncol=2, loc=9)
         leg.get_frame().set_edgecolor('black')
         leg.get_frame().set_linewidth(0.5)
 
-        plt.margins(0, 0, tight=True)
-
+        fig.tight_layout()
         if path_export != '':
             file = path_export + os.sep + city
         else:
             file = city
 
         fig.savefig(file + '.pdf', filetype='pdf', bbox_inches='tight',
-                    dpi=1200)
+                    dpi=1200, pad_inches=0.01)
         fig.savefig(file + '.png', filetype='png', bbox_inches='tight',
-                    dpi=1200)
+                    dpi=1200, pad_inches=0.01)
 
     def plot_distr_of_nodes(self, dis_sew_in_inh, dis_pat_in_inh,
                             dis_cen_in_inh, city, path_export=''):
@@ -183,7 +192,7 @@ class Graphen:
         dev_pat_to_sew = (1 / np.array(sew_y)) * np.array(pat_y) - 1
 
         fig, ax0 = plt.subplots(figsize=(8 / 2.54, 4.5 / 2.54))
-        fig.tight_layout(pad=0, w_pad=0, h_pad=0)
+        fig.tight_layout()
         ax1 = ax0.twinx()
         plot_format()
         ax0.set_xlabel("Population density "
@@ -245,9 +254,9 @@ class Graphen:
             file = city + '_amount_of_points_over_popDens'
 
         fig.savefig(file + '.pdf', filetype='pdf', bbox_inches='tight',
-                    dpi=1200)
+                    dpi=1200, pad_inches=0.01)
         fig.savefig(file + '.png', filetype='png', bbox_inches='tight',
-                    dpi=1200)
+                    dpi=1200, pad_inches=0.01)
 
     def plot_boxplot(self, data, city, name, x_label='', x_rotation=0,
                      y_label='', y_scale='linear', path_export='',
@@ -262,7 +271,7 @@ class Graphen:
         '''
 
         fig, ax = plt.subplots(figsize=(8 / 2.54, 4.5 / 2.54))
-        fig.tight_layout(pad=0, w_pad=0, h_pad=0)
+        fig.tight_layout()
         plot_format()
         ax.set_yscale(y_scale)
         ax.set_ylabel(y_label)
@@ -301,7 +310,7 @@ class Graphen:
                             path_export=''):
 
         fig, ax = plt.subplots(figsize=(8 / 2.54, 4.5 / 2.54))
-        fig.tight_layout(pad=0, w_pad=0, h_pad=0)
+        fig.tight_layout()
         plot_format()
         color = '#4472C4'
         ax.boxplot(data_1.values(), widths=0.4,
@@ -332,9 +341,9 @@ class Graphen:
             file = "{}_{}".format(city, name)
 
         fig.savefig(file + '.pdf', filetype='pdf', bbox_inches='tight',
-                    dpi=1200)
+                    dpi=1200, pad_inches=0.01)
         fig.savefig(file + '.png', filetype='png', bbox_inches='tight',
-                    dpi=1200)
+                    dpi=1200, pad_inches=0.01)
 
     def plot_length_over_V(self, length_over_V_sew, length_over_V_pat):
         pass

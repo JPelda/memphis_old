@@ -55,6 +55,33 @@ class Allocation:
         list_of_inhabs = [dic[key] for key, item in gdf_nodes.iterrows()]
         return list_of_inhabs
 
+    def alloc_wc_from_b_to_node(self, gdf_gis_b, gdf_nodes, graph):
+        """Allocates the water consumption of each building in GIS-Data to
+        nearest node of graph.
+
+        ARGS:
+        ----
+        gdf_gis_b: geopandas.GeoDataFrame()
+            gdf['geometry'], gdf['wc'], gdf['area']
+        graph: nx.Graph()
+
+        RETURNS:
+        -------
+        list_of_wc: list(floats)
+            List of floats is in order of gdf_nodes of graph
+        """
+
+        dic = {key: 0 for key in gdf_nodes.index}
+        geos = gdf_gis_b['SHAPE'][gdf_gis_b['wc'] > 0].centroid
+        wc = gdf_gis_b['wc'][gdf_gis_b['wc'] > 0]
+
+        for i, (geo, wc) in enumerate(zip(geos, wc)):
+            key = get_nearest_node(graph, (geo.y, geo.x))
+            dic[key] += wc
+
+        list_of_wc = [dic[key] for key, item in gdf_nodes.iterrows()]
+        return list_of_wc
+
     def alloc_nodes_to_inhabs(self, gdf_raster, gdf_nodes):
         """Allocates points of gdf to fields of gdf_census.
 
@@ -84,5 +111,27 @@ class Allocation:
                     possible_matches.contains(geo)]
             if not precise_matches.empty:
                 arr[i] = precise_matches['inhabs'].values[0]
+
+        return arr
+
+    def alloc_wc_to_type(self, gis_cat, types):
+        """Allocates waste consumption to types coming from gis_builings.
+
+        ARGS:
+        -----
+        gis_cat: pandas.DataFrame()
+            gis_cat['type'], gis_cat['cat']
+        types: [str]
+            Types to which wc is allocated. Types are found in gis_cat['type']
+
+        RETURNS:
+        -------
+        wc: [float]
+            Returns the water consumption for each type in types.
+        """
+
+        dic = {key: val for key, val in zip(gis_cat['type'],
+                                            gis_cat['cmPsma'])}
+        arr = [dic[t] if t in dic.keys() else 0 for t in types]
 
         return arr
