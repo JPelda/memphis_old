@@ -20,13 +20,9 @@ sys.path.append(os.getcwd() + os.sep + 'src')
 sys.path.append(os.getcwd() + os.sep + 'src' + os.sep + 'utils')
 
 from Data_IO import Data_IO
-from Conditioning import Conditioning
 from Allocation import Allocation
-from wcPERinhab import wcPERinhab
-from merge_points import merge_points
 from transformations_of_crs_values import transform_coords, transform_length,\
-transform_area
-from plotter import plot_format, color_map
+                                          transform_area
 from buffer import buffer
 from accumulate_val_along_path import sum_wc
 from paths_to_dataframe import paths_to_dataframe
@@ -34,7 +30,6 @@ from shortest_paths import shortest_paths
 from Equations import Conversions
 from Evaluation import Clustering
 from Visualisation import Graphen
-#  TODO reproject data with geopandas better than transform coordinates?
 
 #########################################################################
 # LOAD DATA
@@ -67,8 +62,6 @@ wc = wc.drop(0)
 wc['cmPERpTIMESh'] = wc['lPERpTIMESd'].astype(float) / 1000 / (24 * 3600)
 
 graph = Data.read_from_graphml('graph')
-#intersection_centroids = osmnx.simplify.clean_intersections(
-#        graph, tolerance=meter_to_crs_length(20), dead_ends=False)
 
 census = Data.read_from_sqlServer('census')
 gdf_census = gpd.GeoDataFrame(census, crs=Data.coord_system, geometry='SHAPE')
@@ -198,15 +191,6 @@ pat_comp_V_sew = clust.best_pts_within_overlay_pts('V',
                                                    gdf_pts_sewnet,
                                                    buffer=transform_length(20))
 
-#boxplot_V_over_V_pat = {key: [] for key in pat_comp_V_sew.keys()}
-#for key in pat_comp_V_sew.keys():
-#    V_list = []
-#    for val in pat_comp_V_sew[key]:
-#        if not val.empty:
-#            V_list.append(val.V)
-#    if V_list != []:
-#        boxplot_V_over_V_pat[key] = V_list
-
 k = list(pat_comp_V_sew.keys())
 k = [(k[i], k[i+1]) for i, item in enumerate(k) if i+1 < len(k)]
 boxplot_V_over_V_pat = {key: [] for key in pat_comp_V_sew.keys()}
@@ -312,13 +296,6 @@ vis.plot_boxplot(boxplot_V_over_V_pat, Data.city,
                  x_label=x_label, y_label=y_label, y_scale='log',
                  x_rotation=90, path_export=os.getcwd())
 
-#x_label = "$\\dot{V} [\\unitfrac{m^3}{s}]$"
-#y_label = "Distribution of $\\dot{V} [\\unitfrac{m^3}{s}]$"
-#vis.plot_boxplot_2_in_1(boxplot_V_over_V_pat, boxplot_V_over_V_sew,
-#                        Data.city, name='boxplot_distr_Vs_over_V',
-#                        x_label=x_label, y_label=y_label, y_scale='log',
-#                        x_rotation=90, path_export=os.getcwd())
-
 x_label = "$\\dot{V}$ $[\\unitfrac{m^3}{s}]$"
 y_label = "Distribution of length [m]"
 vis.plot_boxplot_2_in_1(boxplot_length_over_V_pat, boxplot_length_over_V_sew,
@@ -345,11 +322,11 @@ vis.plot_distr_of_nodes(dis_sew_in_inh, dis_pat_in_inh, dis_cen_in_inh,
 vis.plot_map(gdf_census,
              gdf_paths[gdf_paths['V'] >= 0.01],
              gdf_sewnet[gdf_sewnet['DN'] >= 0.80], gdf_gis_b, gdf_gis_r,
-             Data.coord_system, Data.city, Data.wwtp.x, Data.wwtp.y, 
+             Data.coord_system, Data.city, Data.wwtp.x, Data.wwtp.y,
              path_export=os.getcwd())
 
 
-geo0 = [x[0] for x in gdf_sewnet['SHAPE'][gdf_sewnet['DN'] >= 0.8].boundary] 
+geo0 = [x[0] for x in gdf_sewnet['SHAPE'][gdf_sewnet['DN'] >= 0.8].boundary]
 geo1 = [x[1] for x in gdf_sewnet['SHAPE'][gdf_sewnet['DN'] >= 0.8].boundary]
 geo2 = [x[0] for x in gdf_paths['geometry'][gdf_paths['V'] >= 0.01].boundary]
 geo3 = [x[1] for x in gdf_paths['geometry'][gdf_paths['V'] >= 0.01].boundary]
@@ -361,14 +338,14 @@ gdf_gis_r_cut = gdf_gis_r[gdf_gis_r.within(convex_hull)]
 gdf_census_cut = gdf_census[gdf_census.within(convex_hull)]
 
 vis.plot_map(gdf_census_cut, gdf_paths[gdf_paths['V'] >= 0.01],
-             gdf_sewnet[gdf_sewnet['DN'] >= 0.80], gdf_gis_b_cut, gdf_gis_r_cut,
-             Data.coord_system, 
+             gdf_sewnet[gdf_sewnet['DN'] >= 0.80], gdf_gis_b_cut,
+             gdf_gis_r_cut, Data.coord_system,
              Data.city + '_cut_ge_DN800', Data.wwtp.x, Data.wwtp.y,
              path_export=os.getcwd())
 
-area = Polygon([[9.9336125704,51.5358519306],[9.9619366976,51.5358519306],
-                [9.9619366976,51.5469020742],[9.9336125704,51.5469020742],
-                [9.9336125704,51.5358519306]])
+area = Polygon([[9.9336125704, 51.5358519306], [9.9619366976, 51.5358519306],
+                [9.9619366976, 51.5469020742], [9.9336125704, 51.5469020742],
+                [9.9336125704, 51.5358519306]])
 gdf_gis_b_cut = gdf_gis_b[gdf_gis_b.within(area)]
 gdf_gis_r_cut = gdf_gis_r[gdf_gis_r.within(area)]
 gdf_census_cut = gdf_census[gdf_census.within(area)]
@@ -378,13 +355,8 @@ gdf_sewnet_cut = gdf_sewnet[gdf_sewnet.within(area)]
 vis.plot_map(gdf_census_cut, gdf_paths_cut,
              gdf_sewnet_cut, gdf_gis_b_cut, gdf_gis_r_cut,
              Data.coord_system, Data.city + '_cut_area',
-             area.centroid.x,area.centroid.y,
+             area.centroid.x, area.centroid.y,
              path_export=os.getcwd(), paths_lw=3, sewnet_lw=1)
-    
-    
-    
-vis.plot_length_over_V(length_over_V_sew, length_over_V_pat)
-
 
 ##########################
 # SAVE
@@ -415,37 +387,21 @@ Data.write_gdf_to_file(gdf_gis_r, 'gis_r.shp')
 # del gdf_paths['osmid']
 # Data.write_gdf_to_file(gdf_paths, 'paths.shp')
 
-#del gdf_sewnet['geometry_b']
+# del gdf_sewnet['geometry_b']
 gdf_sewnet = gdf_sewnet.set_geometry('SHAPE')
 Data.write_gdf_to_file(gdf_sewnet, 'sewnet.shp')
-
-
-# fig.clear()
 
 # Data.write_to_sqlServer('raster_visual', raster)
 # Data.write_to_sqlServer('gis_visual', gis_gdf, dtype=)
 
-# fig.savefig('Göttingen' + '.pdf',
-#            filetype='pdf', bbox_inches='tight', dpi=600)
-
-
 # Data.write_to_sqlServer('raster_visual', raster, dtype={
 #        'SHAPE':'GEOMETRY', 'inhabitans':'int'})
 
-
-# gis_gdf['name'] == None] = 
-#  TODO NULL into sql as object and not string like here:
-# gis_gdf.fillna(value='NULL', inplace=True)
-# Data.write_to_sqlServer('gis_visual', gis_gdf, dtype={'osm_id':'int',
-#                                                      'name':'varchar(100)',
-#                                                      'SHAPE':'GEOMETRY'})
-
 # folder = os.getcwd() + os.sep + 'input'
-# osmnx.save_load.save_graph_shapefile(graph,'goettingen_graph', folder + os.sep)
+# osmnx.save_load.save_graph_shapefile(graph,'goettingen_graph',
+# folder + os.sep)
 # osmnx.save_load.save_gdf_shapefile(gdf_nodes, 'goettingen_graph', folder +
 #                                   os.sep + 'goettingen_graph')
 # osmnx.save_load.save_gdf_shapefile(gdf_edges, 'goettingen_graph', folder +
 #                                   os.sep + 'goettingen_graph')
 # osmnx.save_graphml(graph, 'goettingen.graphml', folder + os.sep)
-
-

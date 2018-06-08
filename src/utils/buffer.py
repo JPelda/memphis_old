@@ -13,23 +13,23 @@ def buffer(gdf, x_min, x_max, y_min, y_max, factor=1.9):
     divided by amounts of poitns in y direction. CRS is variable.
 
     ARGS:
-
-    gdf: geopandas.GeoDataFrame()
+    -----
+    gdf : geopandas.GeoDataFrame()
         gdf['len_x'], gdf['len_y'], gdf['SHAPE']
-    x_max: float
+    x_max : float
         length of map in x direction
-    y_max: float
+    y_max : float
         length of map in y direction
 
     KWARGS:
-
-        factor: float
+    -------
+        factor : float
         Defines the boarder around each rectangle by
         (rectangle's width)/ factor
 
     RETURNS:
-
-    polygons: list
+    -------
+    polygons : list
         polygons of shape rectangle
     """
 

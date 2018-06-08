@@ -19,15 +19,15 @@ class Allocation:
 
         ARGS:
         -----
-        gdf_raster: geopandas.GeoDataFrame()
+        gdf_raster : geopandas.GeoDataFrame()
             gdf['SHAPE'], gdf['SHAPE_b'], gdf['inhabs']
-        gdf_nodes: geopandas.GeoDataFrame()
+        gdf_nodes : geopandas.GeoDataFrame()
             gdf['osmid'], gdf['geometry']
-        graph: nx.Graph()
+        graph : nx.Graph()
 
         RETURNS:
         --------
-        list_of_inhabs: list(floats)
+        list_of_inhabs : list(floats)
             List of floats is in order of gdf_nodes
         """
 
@@ -61,13 +61,13 @@ class Allocation:
 
         ARGS:
         ----
-        gdf_gis_b: geopandas.GeoDataFrame()
+        gdf_gis_b : geopandas.GeoDataFrame()
             gdf['geometry'], gdf['wc'], gdf['area']
-        graph: nx.Graph()
+        graph : nx.Graph()
 
         RETURNS:
         -------
-        list_of_wc: list(floats)
+        list_of_wc : list(floats)
             List of floats is in order of gdf_nodes of graph
         """
 
@@ -87,14 +87,14 @@ class Allocation:
 
         ARGS:
         -----
-        gdf_raster: geopandas.GeoDataFrame()
+        gdf_raster : geopandas.GeoDataFrame()
             gdf_raster['inhabs']
-        gdf_nodes: geopandas.GeoDataFrame()
+        gdf_nodes : geopandas.GeoDataFrame()
             gdf_nodes['geometry'].boundary
 
         RETURNS:
         --------
-        list_of_inhabs: list(floats)
+        list_of_inhabs : list(floats)
             List of floats is in order of gdf_nodes
         """
 
@@ -119,14 +119,14 @@ class Allocation:
 
         ARGS:
         -----
-        gis_cat: pandas.DataFrame()
+        gis_cat : pandas.DataFrame()
             gis_cat['type'], gis_cat['cat']
-        types: [str]
+        types : [str]
             Types to which wc is allocated. Types are found in gis_cat['type']
 
         RETURNS:
         -------
-        wc: [float]
+        wc : [float]
             Returns the water consumption for each type in types.
         """
 

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['calculation',['Calculation',['../class_calculation_1_1_calculation.html',1,'Calculation']]],
-  ['conditioning',['Conditioning',['../class_conditioning_1_1_conditioning.html',1,'Conditioning']]]
+  ['best_5fpts_5fwithin_5foverlay_5fpts',['best_pts_within_overlay_pts',['../class_evaluation_1_1_clustering.html#a3d6ec28e9a32376495a19b1b38f20967',1,'Evaluation::Clustering']]]
 ];

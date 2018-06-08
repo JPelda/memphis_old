@@ -17,19 +17,19 @@ class Conversions():
 
         Args:
         -----
-        df: pandas.DataFrame()
-            col DN: nominal diameter [m]
-            col s_height: height of channel at inlet [m]
-            col e_height: height of channel at outlet [m]
-            col length: length of channel [m]
+        df : pandas.DataFrame()
+             col DN: nominal diameter [m]
+             col s_height: height of channel at inlet [m]
+             col e_height: height of channel at outlet [m]
+             col length: length of channel [m]
 
         Kwargs:
         -------
-        g: float
+        g : float
             earth's acceleration [m/s²] \n
-        v: float
+        v : float
             kinematic viscosity waste water in [m²/s]
-        k: float
+        k : float
             operational roughness of the inner profile wall for sewers [m]
 
         Returns:
@@ -45,7 +45,7 @@ class Conversions():
         delta_h = [np.abs(s - e) if not
                    np.abs(s - e) == 0 else 1e-5 for s, e in
                    zip(s_height, e_height)]
-        # TODO 0.002 is for values that have np.nan as values
+        # 0.002 is for values that have np.nan as values
         J_e = np.array([d / l if not np.isnan(d / l) else 0.002 for
                         d, l in zip(delta_h, length)])
         J_e = np.abs(J_e)

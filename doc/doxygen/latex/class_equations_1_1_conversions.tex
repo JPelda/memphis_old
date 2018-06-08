@@ -1,0 +1,49 @@
+\hypertarget{class_equations_1_1_conversions}{}\section{Equations.\+Conversions Class Reference}
+\label{class_equations_1_1_conversions}\index{Equations.\+Conversions@{Equations.\+Conversions}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_equations_1_1_conversions_a8910645b1e346ed2364d7778b472f5fc}\label{class_equations_1_1_conversions_a8910645b1e346ed2364d7778b472f5fc}} 
+def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self)
+\item 
+def \hyperlink{class_equations_1_1_conversions_aff525ca1a15ef252b71537509b71b001}{D\+N\+\_\+to\+\_\+V} (self, df, g=9.\+81, v=1.\+31e-\/6, k=15e-\/4)
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_equations_1_1_conversions_aff525ca1a15ef252b71537509b71b001}\label{class_equations_1_1_conversions_aff525ca1a15ef252b71537509b71b001}} 
+\index{Equations\+::\+Conversions@{Equations\+::\+Conversions}!D\+N\+\_\+to\+\_\+V@{D\+N\+\_\+to\+\_\+V}}
+\index{D\+N\+\_\+to\+\_\+V@{D\+N\+\_\+to\+\_\+V}!Equations\+::\+Conversions@{Equations\+::\+Conversions}}
+\subsubsection{\texorpdfstring{D\+N\+\_\+to\+\_\+\+V()}{DN\_to\_V()}}
+{\footnotesize\ttfamily def Equations.\+Conversions.\+D\+N\+\_\+to\+\_\+V (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{df,  }\item[{}]{g = {\ttfamily 9.81},  }\item[{}]{v = {\ttfamily 1.31e-\/6},  }\item[{}]{k = {\ttfamily 15e-\/4} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Calculates the maximum volumestream possible in channel with
+nominal width DN.
+
+Args:
+-----
+df: pandas.DataFrame()
+    col DN: nominal diameter [m]
+    col s_height: height of channel at inlet [m]
+    col e_height: height of channel at outlet [m]
+    col length: length of channel [m]
+
+Kwargs:
+-------
+g: float
+    earth's acceleration [m/s²] \n
+v: float
+    kinematic viscosity waste water in [m²/s]
+k: float
+    operational roughness of the inner profile wall for sewers [m]
+
+Returns:
+--------
+Wastewaterflow: float
+    max possible waste water flow in channel [m³ / s]
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/utils/Equations.\+py\end{DoxyCompactItemize}

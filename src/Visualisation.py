@@ -13,9 +13,8 @@ from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 
 sys.path.append(os.getcwd() + os.sep + 'src' + os.sep + 'utils')
-from plotter import plot_format, color_map
+from plotter import plot_format
 from matplotlib.patches import Rectangle
-
 
 
 class Graphen:
@@ -68,13 +67,13 @@ class Graphen:
         gdf_gis_b_color = 'black'
         gdf_gis_b_alpha = 0.2
         gdf_gis_b.plot(ax=ax, color=gdf_gis_b_color, alpha=gdf_gis_b_alpha)
-        
+
         wwtp_legend = []
         if wwtp_x and wwtp_y is not None:
             ax.plot(wwtp_x, wwtp_y, color='black', markersize=10, marker='*')
             wwtp_legend = mlines.Line2D([], [], color='black', marker='*',
-                                    linestyle='None', markersize=10,
-                                    label='Waste water treatment plant')
+                                        linestyle='None', markersize=10,
+                                        label='Waste water treatment plant')
         gdf_gis_r_color = 'black'
         gdf_gis_r_alpha = 0.3
         gdf_gis_r_linewidth = 0.3
@@ -84,18 +83,18 @@ class Graphen:
         gdf_paths.plot(ax=ax, color='r', linewidth=paths_lw)
         gdf_sewnet.plot(ax=ax, color='green', linewidth=sewnet_lw)
 
-
-        # gdf_paths[gdf_paths.DN >= 800].plot(ax=ax, cmap=cmap_paths, norm=norm_paths,
+        # gdf_paths[gdf_paths.DN >= 800].plot(ax=ax, cmap=cmap_paths,
+        # norm=norm_paths,
         #         column="DN", linewidth=1, )
         # gdf_sewnet[gdf_sewnet.width >= 800].plot(ax=ax, cmap=cmap_sewnet,
         #          norm=norm_sewnet, column="width", linewidth=0.8)
-        # for x, y, txt in zip(gdf_nodes['x'], gdf_nodes['y'], gdf_nodes.index):
+        # for x, y, txt in zip(gdf_nodes['x'], gdf_nodes['y'],
+        # gdf_nodes.index):
         #    ax.annotate(txt, (x, y))
         # gdf_dhs.plot(ax=ax)
 
         ax.set_xlabel('Longitude')
         ax.set_ylabel('Latitude')
-        
 
         gdf_gis_b_legend = mlines.Line2D(
                 [], [], color=gdf_gis_b_color, marker='h', linestyle='None',
@@ -117,12 +116,13 @@ class Graphen:
                         "".format(
                                   gdf_sewnet_levels[0],
                                   gdf_sewnet_levels[1])))
-        # gdf_sewnet_legend.append(mlines.Line2D([], [], color=gdf_sewnet_colors[1],
-        #                                  linestyle='-', label=
-        #                                  "Sewage network DN {} $\leq$ x $\leq$ DN {} "
-        #                                  "".format(
-        #                                        gdf_sewnet_levels[1],
-        #                                        gdf_sewnet_levels[2])))
+        # gdf_sewnet_legend.append(mlines.Line2D([], [],
+        #                          color=gdf_sewnet_colors[1],
+        #                          linestyle='-', label=
+        #                         "Sewage network DN {} $\leq$ x $\leq$ DN {} "
+        #                          "".format(
+        #                          gdf_sewnet_levels[1],
+        #                          gdf_sewnet_levels[2])))
 
         legend_empty = [mlines.Line2D([], [], color='None', linestyle='')]
         # ,                mlines.Line2D([], [], color='None', linestyle='')]
@@ -156,8 +156,9 @@ class Graphen:
             handles = [gdf_gis_b_legend] + [gdf_gis_r_legend] +\
                    gdf_sewnet_legend + gdf_path_legend
         else:
-            handles = [wwtp_legend] + [gdf_gis_b_legend] + [gdf_gis_r_legend] +\
-                   gdf_sewnet_legend + gdf_path_legend
+            handles = [wwtp_legend] + [gdf_gis_b_legend] +\
+                        [gdf_gis_r_legend] + gdf_sewnet_legend +\
+                        gdf_path_legend
 
         # Shrink current axis's height by 10% on the bottom
 #        box = ax.get_position()
@@ -169,7 +170,7 @@ class Graphen:
         #  ncol=3)
 
         leg = plt.legend(handles=handles, bbox_to_anchor=(0.5, -0.13),
-                        borderaxespad=0.12, ncol=2, loc=9)
+                         borderaxespad=0.12, ncol=2, loc=9)
         leg.get_frame().set_edgecolor('black')
         leg.get_frame().set_linewidth(0.5)
 
@@ -212,7 +213,7 @@ class Graphen:
         ax0.bar(sorted(dis_sew_in_inh.keys()), dev_pat_to_sew, width=width,
                 color='#4472C4',
                 label="Deviation of point occurances of\n generic network "
-                        "to sewage network $[-]$")
+                      "to sewage network $[-]$")
 
 #        print("Amount of paths' points for inhabs = -1: {}".format(
 #                dis_pat_in_inh[-1]))
@@ -223,9 +224,9 @@ class Graphen:
 
         y = [dis_cen_in_inh[key] if dis_cen_in_inh[key] != 0 else None for
              key in sorted(dis_cen_in_inh.keys())]
-        
+
         ax1.plot(sorted(dis_cen_in_inh.keys()), y, color='black', linestyle='',
-                 marker='.',markersize=1,
+                 marker='.', markersize=1,
                  label='Frequency of value population density $[-]$')
         handles1, labels1 = ax1.get_legend_handles_labels()
 
@@ -246,10 +247,9 @@ class Graphen:
         ax1.set_yscale('symlog')
         ax1.set_ylim(ymin=0)
 
-
         if path_export != '':
             file = path_export + os.sep + city +\
-            '_amount_of_points_over_popDens'
+                   '_amount_of_points_over_popDens'
         else:
             file = city + '_amount_of_points_over_popDens'
 
@@ -261,12 +261,12 @@ class Graphen:
     def plot_boxplot(self, data, city, name, x_label='', x_rotation=0,
                      y_label='', y_scale='linear', path_export='',
                      legend_name=None):
-        '''Distribution of generic calculated volumetric flow over real 
-        netwowork volumetric flow.
+        '''Distribution of generic calculated volumetric flow over real
+        network volumetric flow.
 
         ARGS:
         -----
-        data: dict
+        data : dict
             dict.keys() give the x names, dict.values() is distribution
         '''
 
@@ -279,15 +279,15 @@ class Graphen:
 
         ax.boxplot(data.values())
         ax.set_xticklabels(data.keys(), rotation=x_rotation)
-        if legend_name != None:
-            p_1 = Rectangle((0,0), 1, 1, fill = False, edgecolor='black')
+        if legend_name is not None:
+            p_1 = Rectangle((0, 0), 1, 1, fill=False, edgecolor='black')
             ax.legend([p_1], ["Generic network"])
 
         self.__save_figure(fig, city, name, path_export)
 
-    def plot_boxplot_2_beside_in_1(self, data_1, data_2, city, name, x_label='',
-                              x_rotation=0, y_label='', y_scale='linear',
-                              path_export=''):
+    def plot_boxplot_2_beside_in_1(self, data_1, data_2, city, name,
+                                   x_label='', x_rotation=0, y_label='',
+                                   y_scale='linear', path_export=''):
 
         x = np.array(list(data_1.keys()))
         space = (x[::-1][0] - x[::-1][1]) / 5
@@ -302,7 +302,7 @@ class Graphen:
 
         ax.set_xlim((0 - x[::-1][0] - x[::-1][1], len(x) + 2 * space))
         ax.xaxis.set_ticklabels(x)
-        
+
         self.__save_figure(fig, city, name, path_export)
 
     def plot_boxplot_2_in_1(self, data_1, data_2, city, name, x_label='',
@@ -327,10 +327,10 @@ class Graphen:
         ax.set_ylabel(y_label)
         ax.set_yscale(y_scale)
 
-        p_1 = Rectangle((0,0), 1,1, fc=color)
-        p_2 = Rectangle((0,0), 1,1, fill = False, edgecolor='black')
+        p_1 = Rectangle((0, 0), 1, 1, fc=color)
+        p_2 = Rectangle((0, 0), 1, 1, fill=False, edgecolor='black')
         ax.legend([p_1, p_2], ["Generic network", "Sewage network"])
-        
+
         self.__save_figure(fig, city, name, path_export)
 
     def __save_figure(self, fig, city, name, path_export):
@@ -344,6 +344,3 @@ class Graphen:
                     dpi=1200, pad_inches=0.01)
         fig.savefig(file + '.png', filetype='png', bbox_inches='tight',
                     dpi=1200, pad_inches=0.01)
-
-    def plot_length_over_V(self, length_over_V_sew, length_over_V_pat):
-        pass

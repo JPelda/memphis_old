@@ -13,16 +13,16 @@ def shortest_paths(graph, gdf, end_node):
 
     Args:
     -----
-    graph: networkx.Graph()
-           The graph for which the shortest paths are calculated.
-    gdf: geopandas.DataFrame()
-         gdf.wc shows if path is calculated, if gdf.wc == 0 path is not calc.
-    end_node: int
+    graph : networkx.Graph()
+        The graph for which the shortest paths are calculated.
+    gdf : geopandas.DataFrame()
+        gdf.wc shows if path is calculated, if gdf.wc == 0 path is not calc.
+    end_node : int
          Node number to which path is calculated to.
 
     Returns:
     --------
-    dic.values(): giving all paths for each gdf
+    dic.values() : giving all paths for each gdf
 
     """
     gdf['path_to_end_node'] = None

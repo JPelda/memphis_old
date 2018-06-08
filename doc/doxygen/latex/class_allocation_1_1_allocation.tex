@@ -1,38 +1,107 @@
-\hypertarget{class_allocation_1_1_allocation}{}\section{Allocation Class Reference}
-\label{class_allocation_1_1_allocation}\index{Allocation@{Allocation}}
+\hypertarget{class_allocation_1_1_allocation}{}\section{Allocation.\+Allocation Class Reference}
+\label{class_allocation_1_1_allocation}\index{Allocation.\+Allocation@{Allocation.\+Allocation}}
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{class_allocation_1_1_allocation_ae64f0875afe3067b97ba370b354b9213}\label{class_allocation_1_1_allocation_ae64f0875afe3067b97ba370b354b9213}} 
+\mbox{\Hypertarget{class_allocation_1_1_allocation_a3e9468db342283831f7cf2b818d49a86}\label{class_allocation_1_1_allocation_a3e9468db342283831f7cf2b818d49a86}} 
 def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self)
 \item 
-def \hyperlink{class_allocation_1_1_allocation_a4f3cfc22a96cefe107f4dd3385036d47}{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons} (self, polygons, census)
+def \hyperlink{class_allocation_1_1_allocation_afe048c89fb80434bd3095220118c41b0}{alloc\+\_\+inhabs\+\_\+to\+\_\+nodes} (self, gdf\+\_\+raster, gdf\+\_\+nodes, graph)
 \item 
-\mbox{\Hypertarget{class_allocation_1_1_allocation_ac6d387ff27b96beb3969516234e66f97}\label{class_allocation_1_1_allocation_ac6d387ff27b96beb3969516234e66f97}} 
-def {\bfseries calculate\+\_\+wastewaterflow} (self, sql\+\_\+query, engine)
+def \hyperlink{class_allocation_1_1_allocation_a5bd469a67d08d5b69e45fb6a3c74fda6}{alloc\+\_\+wc\+\_\+from\+\_\+b\+\_\+to\+\_\+node} (self, gdf\+\_\+gis\+\_\+b, gdf\+\_\+nodes, graph)
 \item 
-\mbox{\Hypertarget{class_allocation_1_1_allocation_aeec06a5d0d02edd0a7f51b59e7a3959e}\label{class_allocation_1_1_allocation_aeec06a5d0d02edd0a7f51b59e7a3959e}} 
-def {\bfseries allocate\+\_\+centroids} (self)
+def \hyperlink{class_allocation_1_1_allocation_a2ca842ec76eda148406d56cf0d4153d8}{alloc\+\_\+nodes\+\_\+to\+\_\+inhabs} (self, gdf\+\_\+raster, gdf\+\_\+nodes)
+\item 
+def \hyperlink{class_allocation_1_1_allocation_ac8c7c2ea39a0b71a236fa2d7feda2447}{alloc\+\_\+wc\+\_\+to\+\_\+type} (self, gis\+\_\+cat, types)
 \end{DoxyCompactItemize}
 
 
 \subsection{Member Function Documentation}
-\mbox{\Hypertarget{class_allocation_1_1_allocation_a4f3cfc22a96cefe107f4dd3385036d47}\label{class_allocation_1_1_allocation_a4f3cfc22a96cefe107f4dd3385036d47}} 
-\index{Allocation\+::\+Allocation@{Allocation\+::\+Allocation}!allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons@{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons}}
-\index{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons@{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons}!Allocation\+::\+Allocation@{Allocation\+::\+Allocation}}
-\subsubsection{\texorpdfstring{allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons()}{allocate\_censusgrid\_to\_polygons()}}
-{\footnotesize\ttfamily def allocate\+\_\+censusgrid\+\_\+to\+\_\+polygons (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{polygons,  }\item[{}]{census }\end{DoxyParamCaption})}
+\mbox{\Hypertarget{class_allocation_1_1_allocation_afe048c89fb80434bd3095220118c41b0}\label{class_allocation_1_1_allocation_afe048c89fb80434bd3095220118c41b0}} 
+\index{Allocation\+::\+Allocation@{Allocation\+::\+Allocation}!alloc\+\_\+inhabs\+\_\+to\+\_\+nodes@{alloc\+\_\+inhabs\+\_\+to\+\_\+nodes}}
+\index{alloc\+\_\+inhabs\+\_\+to\+\_\+nodes@{alloc\+\_\+inhabs\+\_\+to\+\_\+nodes}!Allocation\+::\+Allocation@{Allocation\+::\+Allocation}}
+\subsubsection{\texorpdfstring{alloc\+\_\+inhabs\+\_\+to\+\_\+nodes()}{alloc\_inhabs\_to\_nodes()}}
+{\footnotesize\ttfamily def Allocation.\+Allocation.\+alloc\+\_\+inhabs\+\_\+to\+\_\+nodes (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{gdf\+\_\+raster,  }\item[{}]{gdf\+\_\+nodes,  }\item[{}]{graph }\end{DoxyParamCaption})}
 
-\begin{DoxyVerb}input:   polygons as np.array([Polygon(coords), area])
- census as np.array([Polygon(x0, y0, x1, y1]))
-All innputs must be in same coordinate system. Output is the input's
-coordinate system
+\begin{DoxyVerb}Allocates inhabitans to nodes. Nodes in same raster field will get
+raster's inhabitans divided by amout of nodes within raster. Raster
+fields without nodes are allocated to nearest node.
 
-output:  ('polygons', inhab)
-Order of output array of polygons is same like input array of polygons.
+ARGS:
+-----
+gdf_raster: geopandas.GeoDataFrame()
+    gdf['SHAPE'], gdf['SHAPE_b'], gdf['inhabs']
+gdf_nodes: geopandas.GeoDataFrame()
+    gdf['osmid'], gdf['geometry']
+graph: nx.Graph()
+
+RETURNS:
+--------
+list_of_inhabs: list(floats)
+    List of floats is in order of gdf_nodes
+\end{DoxyVerb}
+ \mbox{\Hypertarget{class_allocation_1_1_allocation_a2ca842ec76eda148406d56cf0d4153d8}\label{class_allocation_1_1_allocation_a2ca842ec76eda148406d56cf0d4153d8}} 
+\index{Allocation\+::\+Allocation@{Allocation\+::\+Allocation}!alloc\+\_\+nodes\+\_\+to\+\_\+inhabs@{alloc\+\_\+nodes\+\_\+to\+\_\+inhabs}}
+\index{alloc\+\_\+nodes\+\_\+to\+\_\+inhabs@{alloc\+\_\+nodes\+\_\+to\+\_\+inhabs}!Allocation\+::\+Allocation@{Allocation\+::\+Allocation}}
+\subsubsection{\texorpdfstring{alloc\+\_\+nodes\+\_\+to\+\_\+inhabs()}{alloc\_nodes\_to\_inhabs()}}
+{\footnotesize\ttfamily def Allocation.\+Allocation.\+alloc\+\_\+nodes\+\_\+to\+\_\+inhabs (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{gdf\+\_\+raster,  }\item[{}]{gdf\+\_\+nodes }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Allocates points of gdf to fields of gdf_census.
+
+ARGS:
+-----
+gdf_raster: geopandas.GeoDataFrame()
+    gdf_raster['inhabs']
+gdf_nodes: geopandas.GeoDataFrame()
+    gdf_nodes['geometry'].boundary
+
+RETURNS:
+--------
+list_of_inhabs: list(floats)
+    List of floats is in order of gdf_nodes
+\end{DoxyVerb}
+ \mbox{\Hypertarget{class_allocation_1_1_allocation_a5bd469a67d08d5b69e45fb6a3c74fda6}\label{class_allocation_1_1_allocation_a5bd469a67d08d5b69e45fb6a3c74fda6}} 
+\index{Allocation\+::\+Allocation@{Allocation\+::\+Allocation}!alloc\+\_\+wc\+\_\+from\+\_\+b\+\_\+to\+\_\+node@{alloc\+\_\+wc\+\_\+from\+\_\+b\+\_\+to\+\_\+node}}
+\index{alloc\+\_\+wc\+\_\+from\+\_\+b\+\_\+to\+\_\+node@{alloc\+\_\+wc\+\_\+from\+\_\+b\+\_\+to\+\_\+node}!Allocation\+::\+Allocation@{Allocation\+::\+Allocation}}
+\subsubsection{\texorpdfstring{alloc\+\_\+wc\+\_\+from\+\_\+b\+\_\+to\+\_\+node()}{alloc\_wc\_from\_b\_to\_node()}}
+{\footnotesize\ttfamily def Allocation.\+Allocation.\+alloc\+\_\+wc\+\_\+from\+\_\+b\+\_\+to\+\_\+node (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{gdf\+\_\+gis\+\_\+b,  }\item[{}]{gdf\+\_\+nodes,  }\item[{}]{graph }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Allocates the water consumption of each building in GIS-Data to
+nearest node of graph.
+
+ARGS:
+----
+gdf_gis_b: geopandas.GeoDataFrame()
+    gdf['geometry'], gdf['wc'], gdf['area']
+graph: nx.Graph()
+
+RETURNS:
+-------
+list_of_wc: list(floats)
+    List of floats is in order of gdf_nodes of graph
+\end{DoxyVerb}
+ \mbox{\Hypertarget{class_allocation_1_1_allocation_ac8c7c2ea39a0b71a236fa2d7feda2447}\label{class_allocation_1_1_allocation_ac8c7c2ea39a0b71a236fa2d7feda2447}} 
+\index{Allocation\+::\+Allocation@{Allocation\+::\+Allocation}!alloc\+\_\+wc\+\_\+to\+\_\+type@{alloc\+\_\+wc\+\_\+to\+\_\+type}}
+\index{alloc\+\_\+wc\+\_\+to\+\_\+type@{alloc\+\_\+wc\+\_\+to\+\_\+type}!Allocation\+::\+Allocation@{Allocation\+::\+Allocation}}
+\subsubsection{\texorpdfstring{alloc\+\_\+wc\+\_\+to\+\_\+type()}{alloc\_wc\_to\_type()}}
+{\footnotesize\ttfamily def Allocation.\+Allocation.\+alloc\+\_\+wc\+\_\+to\+\_\+type (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{gis\+\_\+cat,  }\item[{}]{types }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Allocates waste consumption to types coming from gis_builings.
+
+ARGS:
+-----
+gis_cat: pandas.DataFrame()
+    gis_cat['type'], gis_cat['cat']
+types: [str]
+    Types to which wc is allocated. Types are found in gis_cat['type']
+
+RETURNS:
+-------
+wc: [float]
+    Returns the water consumption for each type in types.
 \end{DoxyVerb}
  
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 
-C\+:/\+Users/jpelda/\+Documents/\+Git\+Hub/memphis/class/Allocation.\+py\end{DoxyCompactItemize}
+src/Allocation.\+py\end{DoxyCompactItemize}

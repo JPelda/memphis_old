@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MEMPHIS: Calculation.Calculation Class Reference</title>
+<title>MEMPHIS: Equations.Conversions Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -60,29 +60,99 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>Calculation</b></li><li class="navelem"><a class="el" href="class_calculation_1_1_calculation.html">Calculation</a></li>  </ul>
+<li class="navelem"><b>Equations</b></li><li class="navelem"><a class="el" href="class_equations_1_1_conversions.html">Conversions</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="class_calculation_1_1_calculation-members.html">List of all members</a>  </div>
+<a href="class_equations_1_1_conversions-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Calculation.Calculation Class Reference</div>  </div>
+<div class="title">Equations.Conversions Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7a5029b13f345c21aea6fc2318737a2d"><td class="memItemLeft" align="right" valign="top"><a id="a7a5029b13f345c21aea6fc2318737a2d"></a>
+<tr class="memitem:a8910645b1e346ed2364d7778b472f5fc"><td class="memItemLeft" align="right" valign="top"><a id="a8910645b1e346ed2364d7778b472f5fc"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>__init__</b> (self)</td></tr>
-<tr class="separator:a7a5029b13f345c21aea6fc2318737a2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad90e562ee0f3bf85d966f10b61e9946b"><td class="memItemLeft" align="right" valign="top"><a id="ad90e562ee0f3bf85d966f10b61e9946b"></a>
-def&#160;</td><td class="memItemRight" valign="bottom"><b>comulate_sawageflows</b> (self, sql_query, engine)</td></tr>
-<tr class="separator:ad90e562ee0f3bf85d966f10b61e9946b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a8910645b1e346ed2364d7778b472f5fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff525ca1a15ef252b71537509b71b001"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_equations_1_1_conversions.html#aff525ca1a15ef252b71537509b71b001">DN_to_V</a> (self, df, g=9.81, v=1.31e-6, k=15e-4)</td></tr>
+<tr class="separator:aff525ca1a15ef252b71537509b71b001"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="aff525ca1a15ef252b71537509b71b001"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff525ca1a15ef252b71537509b71b001">&#9670;&nbsp;</a></span>DN_to_V()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">def Equations.Conversions.DN_to_V </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>df</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>g</em> = <code>9.81</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>v</em> = <code>1.31e-6</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>k</em> = <code>15e-4</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<pre class="fragment">Calculates the maximum volumestream possible in channel with
+nominal width DN.
+
+Args:
+-----
+df: pandas.DataFrame()
+    col DN: nominal diameter [m]
+    col s_height: height of channel at inlet [m]
+    col e_height: height of channel at outlet [m]
+    col length: length of channel [m]
+
+Kwargs:
+-------
+g: float
+    earth's acceleration [m/s²] \n
+v: float
+    kinematic viscosity waste water in [m²/s]
+k: float
+    operational roughness of the inner profile wall for sewers [m]
+
+Returns:
+--------
+Wastewaterflow: float
+    max possible waste water flow in channel [m³ / s]
+</pre> 
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>src/Calculation.py</li>
+<li>src/utils/Equations.py</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

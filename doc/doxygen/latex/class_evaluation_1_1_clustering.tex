@@ -1,0 +1,72 @@
+\hypertarget{class_evaluation_1_1_clustering}{}\section{Evaluation.\+Clustering Class Reference}
+\label{class_evaluation_1_1_clustering}\index{Evaluation.\+Clustering@{Evaluation.\+Clustering}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_evaluation_1_1_clustering_a41b9f316086ed5182b99a42f0efb2dac}\label{class_evaluation_1_1_clustering_a41b9f316086ed5182b99a42f0efb2dac}} 
+def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self)
+\item 
+def \hyperlink{class_evaluation_1_1_clustering_a97093141aaad40fcc7a8df2f214200bb}{count\+\_\+val\+\_\+over\+\_\+key} (self, gdf, keys, keys\+\_\+name=\textquotesingle{}inhabs\textquotesingle{})
+\item 
+def \hyperlink{class_evaluation_1_1_clustering_a3d6ec28e9a32376495a19b1b38f20967}{best\+\_\+pts\+\_\+within\+\_\+overlay\+\_\+pts} (self, comp\+\_\+val, gdf, gdf\+\_\+orig, buffer)
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_evaluation_1_1_clustering_a3d6ec28e9a32376495a19b1b38f20967}\label{class_evaluation_1_1_clustering_a3d6ec28e9a32376495a19b1b38f20967}} 
+\index{Evaluation\+::\+Clustering@{Evaluation\+::\+Clustering}!best\+\_\+pts\+\_\+within\+\_\+overlay\+\_\+pts@{best\+\_\+pts\+\_\+within\+\_\+overlay\+\_\+pts}}
+\index{best\+\_\+pts\+\_\+within\+\_\+overlay\+\_\+pts@{best\+\_\+pts\+\_\+within\+\_\+overlay\+\_\+pts}!Evaluation\+::\+Clustering@{Evaluation\+::\+Clustering}}
+\subsubsection{\texorpdfstring{best\+\_\+pts\+\_\+within\+\_\+overlay\+\_\+pts()}{best\_pts\_within\_overlay\_pts()}}
+{\footnotesize\ttfamily def Evaluation.\+Clustering.\+best\+\_\+pts\+\_\+within\+\_\+overlay\+\_\+pts (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{comp\+\_\+val,  }\item[{}]{gdf,  }\item[{}]{gdf\+\_\+orig,  }\item[{}]{buffer }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Selects pts in gdf, that match to pts in gdf_orig,
+clustered to 0.25, 0.5, 0.75, 1....
+
+ARGS:
+-----
+comp_val: str
+    the col_name by which the best point is compared to gdf_orig
+gdf: geopandas.DataFrame()
+    gdf with col 'geometry' that is matched with gdf_orig.
+gdf_orig: geopandas.DataFrame()
+    gdf with col 'geometry' gdf is matched to.
+buffer: float
+    Buffer around gdf_orig['geometry'] in [m].
+
+RETURNS:
+--------
+rang: dict
+    dictionary of gdf's
+\end{DoxyVerb}
+ \mbox{\Hypertarget{class_evaluation_1_1_clustering_a97093141aaad40fcc7a8df2f214200bb}\label{class_evaluation_1_1_clustering_a97093141aaad40fcc7a8df2f214200bb}} 
+\index{Evaluation\+::\+Clustering@{Evaluation\+::\+Clustering}!count\+\_\+val\+\_\+over\+\_\+key@{count\+\_\+val\+\_\+over\+\_\+key}}
+\index{count\+\_\+val\+\_\+over\+\_\+key@{count\+\_\+val\+\_\+over\+\_\+key}!Evaluation\+::\+Clustering@{Evaluation\+::\+Clustering}}
+\subsubsection{\texorpdfstring{count\+\_\+val\+\_\+over\+\_\+key()}{count\_val\_over\_key()}}
+{\footnotesize\ttfamily def Evaluation.\+Clustering.\+count\+\_\+val\+\_\+over\+\_\+key (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{gdf,  }\item[{}]{keys,  }\item[{}]{keys\+\_\+name = {\ttfamily \textquotesingle{}inhabs\textquotesingle{}} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Clusters points to -1, 0, 5, 10, 15... by its inhabs as
+    gdf,keys()
+
+ARGS:
+-----
+gdf: geopandas.DataFrame()
+    Data that are clustered by keys
+keys: set
+    Are the keys the gdf is clustered by.
+
+KWARGS:
+------
+keys_name: str
+    The name of values of keys. Must also be given as col name in gdf.
+
+RETURNS:
+--------
+rang: dict
+    dict.keys == cluster_keys, dict.values == len(items of gdfs) per
+    cluter_key
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/Evaluation.\+py\end{DoxyCompactItemize}

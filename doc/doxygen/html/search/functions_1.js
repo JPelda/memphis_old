@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['read_5ffrom_5fsqlserver',['read_from_sqlServer',['../class_data___i_o_1_1_data___i_o.html#a6af825f0682e54cbb22f57a189a6fcc8',1,'Data_IO::Data_IO']]]
+  ['best_5fpts_5fwithin_5foverlay_5fpts',['best_pts_within_overlay_pts',['../class_evaluation_1_1_clustering.html#a3d6ec28e9a32376495a19b1b38f20967',1,'Evaluation::Clustering']]]
 ];
