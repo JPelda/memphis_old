@@ -186,20 +186,25 @@ class Graphen:
                     dpi=1200, pad_inches=0.01)
 
     def plot_distr_of_nodes(self, dis_sew_in_inh, dis_pat_in_inh,
-                            dis_cen_in_inh, city, path_export=''):
+                            dis_cen_in_inh, city, name, path_export=''):
 
         sew_y = [dis_sew_in_inh[key] for key in sorted(dis_sew_in_inh.keys())]
         pat_y = [dis_pat_in_inh[key] for key in sorted(dis_pat_in_inh.keys())]
-        dev_pat_to_sew = (1 / np.array(sew_y)) * np.array(pat_y) - 1
+        dev_pat_to_sew = (np.array(sew_y) - np.array(pat_y)) / np.array(sew_y)
+        dev_pat_to_sew[dev_pat_to_sew == np.inf] = np.nan
+        dev_pat_to_sew[dev_pat_to_sew == -np.inf] = np.nan
+        dev_pat_to_sew = dev_pat_to_sew / np.nanmax(abs(dev_pat_to_sew))
+        dev_pat_to_sew = 1 - abs(dev_pat_to_sew)
+
 
         fig, ax0 = plt.subplots(figsize=(8 / 2.54, 4.5 / 2.54))
         fig.tight_layout()
         ax1 = ax0.twinx()
         plot_format()
         ax0.set_xlabel("Population density "
-                       "$[\\unitfrac{Persons}{10,000 m^2}]$")
-        ax0.set_ylabel('Congruity [-]')
-        ax1.set_ylabel('Frequency [-]')
+                       "$[\\unitfrac{Inhabitants}{10,000 m^2}]$")
+        ax0.set_ylabel('Match $[-]$')
+        ax1.set_ylabel('Frequency $[-]$')
 
         width = 1
 
@@ -212,8 +217,7 @@ class Graphen:
 
         ax0.bar(sorted(dis_sew_in_inh.keys()), dev_pat_to_sew, width=width,
                 color='#4472C4',
-                label="Deviation of point occurances of\n generic network "
-                      "to sewage network $[-]$")
+                label="Match of the points between the networks $[-]$")
 
 #        print("Amount of paths' points for inhabs = -1: {}".format(
 #                dis_pat_in_inh[-1]))
@@ -227,13 +231,13 @@ class Graphen:
 
         ax1.plot(sorted(dis_cen_in_inh.keys()), y, color='black', linestyle='',
                  marker='.', markersize=1,
-                 label='Frequency of value population density $[-]$')
+                 label='Frequency of the raster $[-]$')
         handles1, labels1 = ax1.get_legend_handles_labels()
 
         handles = handles0 + handles1
         labels = labels0 + labels1
 
-        ax0.legend(handles, labels, loc='upper right')
+        ax0.legend(handles, labels, loc='center', bbox_to_anchor=(0.5, 1.2))
 
 #        _, y1 = ax0.transData.transform((0, 0))
 #        _, y2 = ax1.transData.transform((0, 0))
@@ -241,22 +245,17 @@ class Graphen:
 #        _, dy = inv.transform((0, 0)) - inv.transform((0, y1-y2))
 #        miny, maxy = ax1.get_ylim()
 #        ax1.set_ylim(miny+dy, maxy+dy)
-
+        start, end = ax0.get_ylim()
+        ax0.set_yticks(np.arange(np.floor(start), 1.1, 0.25))
         ax0.axhline(0, linewidth=0.5, color='black', zorder=3)
-        ax0.set_yscale('symlog')
+#        ax0.set_yscale('symlog')
+#        ax0.set_ylim(ymin=-1)
         ax1.set_yscale('symlog')
+
         ax1.set_ylim(ymin=0)
+        
+        self.__save_figure(fig, city, name, path_export)
 
-        if path_export != '':
-            file = path_export + os.sep + city +\
-                   '_amount_of_points_over_popDens'
-        else:
-            file = city + '_amount_of_points_over_popDens'
-
-        fig.savefig(file + '.pdf', filetype='pdf', bbox_inches='tight',
-                    dpi=1200, pad_inches=0.01)
-        fig.savefig(file + '.png', filetype='png', bbox_inches='tight',
-                    dpi=1200, pad_inches=0.01)
 
     def plot_boxplot(self, data, city, name, x_label='', x_rotation=0,
                      y_label='', y_scale='linear', path_export='',
@@ -278,7 +277,12 @@ class Graphen:
         ax.set_xlabel(x_label)
 
         ax.boxplot(data.values())
-        ax.set_xticklabels(data.keys(), rotation=x_rotation)
+        x_keys = list(data.keys())
+        if -1 in x_keys:
+            x_keys[0] = ''
+
+        ax.set_xticklabels(x_keys, rotation=x_rotation)
+#        ax.set_xticklabels(data.keys(), rotation=x_rotation)
         if legend_name is not None:
             p_1 = Rectangle((0, 0), 1, 1, fill=False, edgecolor='black')
             ax.legend([p_1], ["Generic network"])
@@ -322,14 +326,19 @@ class Graphen:
                    patch_artist=True)
         ax.boxplot(data_2.values(), widths=0.8)
 
-        ax.xaxis.set_ticklabels(list(data_1.keys()), rotation=x_rotation)
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.set_yscale(y_scale)
 
+        x_keys = sorted(list(data_1.keys()))
+        if -1 in x_keys:
+            x_keys[0] = ''
+        ax.set_xticklabels(x_keys, rotation=x_rotation)
+
         p_1 = Rectangle((0, 0), 1, 1, fc=color)
         p_2 = Rectangle((0, 0), 1, 1, fill=False, edgecolor='black')
-        ax.legend([p_1, p_2], ["Generic network", "Sewage network"])
+        ax.legend([p_1, p_2], ["Generic network", "Sewage network"],
+                  ncol=2)
 
         self.__save_figure(fig, city, name, path_export)
 

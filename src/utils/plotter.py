@@ -9,7 +9,7 @@ from matplotlib import verbose
 
 def plot_format(xtick_direction='in', ytick_direction='in'):
 #    rc('font', family='sans-serif')
-    rc('font', family='sans-serif', size=8)
+    rc('font', family='sans-serif', size=7)
 
 #    rc('mathtext', fontset = 'dejavusans')
     rc('text', usetex=True)
@@ -25,7 +25,7 @@ def plot_format(xtick_direction='in', ytick_direction='in'):
     rc('ps', fonttype=42)
 #    rc('figure', figsize = [16/2.54 , 9/2.54])
     grid_linewidth = 0.3
-    xyLabelsize=8
+    xyLabelsize=7
 #    labelsize = 14
     rc('lines', lw = 1.3, c='r', ls='-', dash_capstyle='round',
        solid_capstyle='round')

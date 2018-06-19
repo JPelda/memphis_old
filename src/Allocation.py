@@ -100,6 +100,7 @@ class Allocation:
 
         gdf_raster_spatial_index = gdf_raster.sindex
         arr = [0] * len(gdf_nodes)
+        raster = [0] * len(gdf_nodes)
 
         for i, geo in enumerate(gdf_nodes['geometry']):
 
@@ -111,8 +112,8 @@ class Allocation:
                     possible_matches.contains(geo)]
             if not precise_matches.empty:
                 arr[i] = precise_matches['inhabs'].values[0]
-
-        return arr
+                raster[i] = precise_matches.index.values[0]
+        return arr, raster
 
     def alloc_wc_to_type(self, gis_cat, types):
         """Allocates waste consumption to types coming from gis_builings.

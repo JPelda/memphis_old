@@ -174,9 +174,9 @@ gdf_pts_paths = gpd.GeoDataFrame(df, crs=Data.coord_system,
                                  geometry='geometry')
 
 gdf_census = gdf_census.set_geometry('SHAPE_b')
-gdf_pts_sewnet['inhabs'] = alloc.alloc_nodes_to_inhabs(
+gdf_pts_sewnet['inhabs'], gdf_pts_sewnet['raster'] = alloc.alloc_nodes_to_inhabs(
         gdf_census, gdf_pts_sewnet)
-gdf_pts_paths['inhabs'] = alloc.alloc_nodes_to_inhabs(
+gdf_pts_paths['inhabs'], gdf_pts_paths['raster'] = alloc.alloc_nodes_to_inhabs(
         gdf_census, gdf_pts_paths)
 
 # Getting distribution of points V to census inhabs
@@ -289,8 +289,7 @@ print('\nvisualisation')
 vis = Graphen()
 
 x_label = "$\\dot{V}$ of sewage network $[\\unitfrac{m^3}{s}]$"
-y_label = "Distribution of $\\dot{V}$ of \ngeneric network"
-" $[\\unitfrac{m^3}{s}]$"
+y_label = "Distribution of $\\dot{V}$ of \ngeneric network $[\\unitfrac{m^3}{s}]$"
 vis.plot_boxplot(boxplot_V_over_V_pat, Data.city,
                  name='boxplot_distr_V_over_V',
                  x_label=x_label, y_label=y_label, y_scale='log',
@@ -317,7 +316,8 @@ vis.plot_boxplot(data, Data.city,
                  path_export=os.getcwd())
 
 vis.plot_distr_of_nodes(dis_sew_in_inh, dis_pat_in_inh, dis_cen_in_inh,
-                        Data.city, path_export=os.getcwd())
+                        Data.city, 'amount_of_points_over_popDens',
+                        path_export=os.getcwd())
 
 vis.plot_map(gdf_census,
              gdf_paths[gdf_paths['V'] >= 0.01],

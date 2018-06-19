@@ -22,3 +22,7 @@ git push
 ##Merge branches
 '''Merges the [branch_name] into temporarly selected branch
 git merge [branch_name]
+
+
+##Literature
+https://jeffknupp.com/blog/2013/08/16/open-sourcing-a-python-project-the-right-way/
